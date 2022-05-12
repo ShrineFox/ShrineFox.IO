@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ShrineFox.io
+namespace ShrineFox.IO
 {
     public class Window
     {
@@ -64,6 +64,7 @@ namespace ShrineFox.io
                 p.StartInfo.Arguments = args;
                 p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 p.Start();
+                Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
                 Thread.Sleep(1200);
                 p.WaitForInputIdle();
 

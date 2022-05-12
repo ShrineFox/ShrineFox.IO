@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShrineFox.io
+namespace ShrineFox.IO
 {
     public class Python
     {

@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ShrineFox.io
+namespace ShrineFox.IO
 {
     public class Output
     {
