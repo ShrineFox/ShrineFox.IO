@@ -15,9 +15,9 @@ namespace ShrineFox.IO
         /// </summary>
         private static string[] PossibleInstallLocations = new string[3] 
         {
-                @"HKLM\SOFTWARE\Python\PythonCore\",
-                @"HKCU\SOFTWARE\Python\PythonCore\",
-                @"HKLM\SOFTWARE\Wow6432Node\Python\PythonCore\"
+            @"HKCU\SOFTWARE\Python\PythonCore\",
+            @"HKLM\SOFTWARE\Python\PythonCore\",
+            @"HKLM\SOFTWARE\Wow6432Node\Python\PythonCore\"
         };
 
         /// <summary>
@@ -30,11 +30,11 @@ namespace ShrineFox.IO
         /// <summary>
         /// Update FoundLocations with the path of every Python install within a specified range.
         /// </summary>
-        /// <param name="requiredVersion">The lowest required Python version. e.x. "0.0.1"</param>
-        /// <param name="maxVersion">The highest allowed Python version. e.x. "999.999.999"</param>
+        /// <param name="requiredVersion">The lowest required Python version. Default: "0.0.1"</param>
+        /// <param name="maxVersion">The highest allowed Python version. Default: "999.999.999"</param>
         /// <param name="requiredScripts">A list of .exe names required to be found in the Python install's Scripts directory. e.x. "byml_to_yml.exe"</param>
         /// <returns></returns>
-        public static void GetInstalls(string requiredVersion = "", string maxVersion = "", List<string> requiredScripts = null)
+        public static void GetInstalls(string requiredVersion = "0.0.1", string maxVersion = "999.999.999", List<string> requiredScripts = null)
         {
             foreach (string possibleLocation in PossibleInstallLocations)
             {
@@ -44,24 +44,31 @@ namespace ShrineFox.IO
                     RegistryKey theKey = (regKey == "HKLM" ? Registry.LocalMachine : Registry.CurrentUser);
                     RegistryKey theValue = theKey.OpenSubKey(actualPath);
 
-                    foreach (var v in theValue.GetSubKeyNames())
+                    if (theValue != null)
                     {
-                        RegistryKey productKey = theValue.OpenSubKey(v);
-                        if (productKey != null)
+                        try
                         {
-                            try
+                            foreach (var v in theValue.GetSubKeyNames())
                             {
-                                string pythonExePath = productKey.OpenSubKey("InstallPath").GetValue("ExecutablePath").ToString();
-                                if (pythonExePath != null && pythonExePath != "")
+                                RegistryKey productKey = theValue.OpenSubKey(v);
+                                if (productKey != null)
                                 {
-                                    if (requiredScripts != null && !requiredScripts.Any(x => !File.Exists(Path.Combine(Path.GetDirectoryName(pythonExePath), Path.Combine("Scripts", x)))))
-                                        FoundLocations.Add(v.ToString(), pythonExePath);
+                                    try
+                                    {
+                                        string pythonExePath = productKey.OpenSubKey("InstallPath").GetValue("ExecutablePath").ToString();
+                                        if (!String.IsNullOrEmpty(pythonExePath))
+                                        {
+                                            if (requiredScripts == null || (requiredScripts != null && !requiredScripts.Any(x => !File.Exists(Path.Combine(Path.GetDirectoryName(pythonExePath), Path.Combine("Scripts", x))))))
+                                                FoundLocations.Add(v.ToString(), pythonExePath);
+                                        }
+                                        else
+                                            FoundLocations.Add(v.ToString(), pythonExePath);
+                                    }
+                                    catch { }
                                 }
-                                else
-                                    FoundLocations.Add(v.ToString(), pythonExePath);
                             }
-                            catch { }
                         }
+                        catch { }
                     }
                 }
                 catch { }

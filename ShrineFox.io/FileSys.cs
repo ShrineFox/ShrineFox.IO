@@ -139,7 +139,6 @@ namespace ShrineFox.IO
                     Thread.Sleep(2000);
                 }
             }
-
             return null;
         }
     }

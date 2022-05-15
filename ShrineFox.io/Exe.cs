@@ -26,10 +26,20 @@ namespace ShrineFox.IO
         /// </summary>
         /// <param name="exePath">Path to the .exe to execute.</param>
         /// <param name="args">Additional arguments for the exe.</param>
-        public static void Run_WaitForExit(string exePath, string args = "")
+        /// <param name="waitForExit">(Optional) Whether to halt code execution until process is complete. True by default.</param>
+        /// <param name="workingDir">(Optional) The directory to execute from. Uses exePath directory if not specified.</param>
+        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "")
         {
             using (Process p = new Process())
             {
+                // Set working directory to exe dir if not specified
+                if (workingDir != "")
+                    p.StartInfo.WorkingDirectory = workingDir;
+                else
+                    p.StartInfo.WorkingDirectory = Path.GetDirectoryName(exePath);
+                // Output working dir, exe path and arguments to console/log
+                Output.Log($"{workingDir}>{exePath} {args}");
+                // Set exe path and args, hide window and redirect output
                 p.StartInfo.FileName = exePath;
                 p.StartInfo.Arguments = args;
                 p.StartInfo.CreateNoWindow = true;
@@ -45,10 +55,13 @@ namespace ShrineFox.IO
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
                 // Start the asynchronous read
                 p.BeginOutputReadLine();
-                p.WaitForExit();
-                p.Close();
-                RemoveHandleFromProcList(p.Handle);
-                p.Dispose();
+                if (waitForExit)
+                {
+                    p.WaitForExit();
+                    RemoveHandleFromProcList(p.Handle);
+                    p.Close();
+                    p.Dispose();
+                }
             }
         }
 
@@ -56,17 +69,28 @@ namespace ShrineFox.IO
         /// Closes all processes with a specific name.
         /// </summary>
         /// <param name="procName">The name of the process to close.</param>
-        public static void CloseProcess(string procName)
+        /// <param name="closeAll">(Optional) Close all processes with this name regardless of whether it was launched by this program.</param>
+        public static void CloseProcess(string procName, bool closeAll = false)
         {
-            try
+            if (!closeAll)
             {
-                foreach (Process p in Process.GetProcessesByName(procName))
+                foreach (var handle in Processes.Where(x => x.Item1.Equals(procName)))
                 {
-                    p.Kill();
-                    RemoveHandleFromProcList(p.Handle);
-                } 
+                    CloseProcess(handle.Item2);
+                }
             }
-            catch { }
+            else
+            {
+                try
+                {
+                    foreach (Process p in Process.GetProcessesByName(procName))
+                    {
+                        p.Kill();
+                        RemoveHandleFromProcList(p.Handle);
+                    }
+                }
+                catch { }
+            }
         }
 
         /// <summary>

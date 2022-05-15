@@ -32,6 +32,8 @@ namespace ShrineFox.IO
         /// </summary>
         public static RichTextBox LogControl { get; set; } = new RichTextBox();
 
+        private static bool SkipControlLog { get; set; } = false;
+
         /// <summary>
         /// Logs text with a timestamp to the directory specified by LogPath.
         /// </summary>
@@ -47,21 +49,24 @@ namespace ShrineFox.IO
 
                 if (LogPath != "" && !skipTxtFile)
                     File.AppendAllText(LogPath, logText);
-                if (LogControl != new RichTextBox())
+                try
                 {
-                    LogControl.SuspendLayout();
-                    LogControl.SelectionStart = LogControl.TextLength;
-                    LogControl.SelectionLength = 0;
-                    LogControl.SelectionColor = FromColor(color);
-                    LogControl.AppendText(logText);
-                    LogControl.ScrollToCaret();
-                    LogControl.ResumeLayout();
-                }
+                    if (LogControl != new RichTextBox())
+                    {
+                        LogControl.SuspendLayout();
+                        LogControl.SelectionStart = LogControl.TextLength;
+                        LogControl.SelectionLength = 0;
+                        LogControl.SelectionColor = FromColor(color);
+                        LogControl.AppendText(logText);
+                        LogControl.ScrollToCaret();
+                        LogControl.ResumeLayout();
+                        LogControl.SelectionColor = Color.Silver;
+                    }
+                } catch { SkipControlLog = true; }
                 if (color != new ConsoleColor())
                     Console.ForegroundColor = color;
                 Console.WriteLine(text);
                 Console.ResetColor();
-                LogControl.SelectionColor = Color.Silver;
             }
         }
 
