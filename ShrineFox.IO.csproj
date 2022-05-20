@@ -45,19 +45,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Endian\AlignmentHelper.cs" />
-    <Compile Include="Endian\EndianBinaryReader.cs" />
-    <Compile Include="Endian\EndianBinaryWriter.cs" />
-    <Compile Include="Endian\Endianness.cs" />
-    <Compile Include="Endian\EndiannessHelper.cs" />
-    <Compile Include="Endian\FileHelper.cs" />
-    <Compile Include="Endian\StringBinaryFormat.cs" />
-    <Compile Include="Endian\Unsafe.cs" />
-    <Compile Include="FileSys.cs" />
-    <Compile Include="Python.cs" />
-    <Compile Include="Window.cs" />
-    <Compile Include="Output.cs" />
-    <Compile Include="Exe.cs" />
+    <Compile Include="Classes\Endian\AlignmentHelper.cs" />
+    <Compile Include="Classes\Endian\EndianBinaryReader.cs" />
+    <Compile Include="Classes\Endian\EndianBinaryWriter.cs" />
+    <Compile Include="Classes\Endian\Endianness.cs" />
+    <Compile Include="Classes\Endian\EndiannessHelper.cs" />
+    <Compile Include="Classes\Endian\FileHelper.cs" />
+    <Compile Include="Classes\Endian\StringBinaryFormat.cs" />
+    <Compile Include="Classes\Endian\Unsafe.cs" />
+    <Compile Include="Classes\FileSys.cs" />
+    <Compile Include="Classes\Python.cs" />
+    <Compile Include="Classes\TreeView.cs" />
+    <Compile Include="Classes\Window.cs" />
+    <Compile Include="Classes\Output.cs" />
+    <Compile Include="Classes\Exe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
