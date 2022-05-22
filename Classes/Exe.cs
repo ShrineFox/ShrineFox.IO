@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,33 @@ namespace ShrineFox.IO
 {
     public class Exe
     {
+        /// <summary>
+        /// Returns the path to the program's executable.
+        /// </summary>
+        /// <returns></returns>
+        public static string FullPath()
+        {
+            return Process.GetCurrentProcess().MainModule.FileName;
+        }
+
+        /// <summary>
+        /// Returns the path to the program's executable directory.
+        /// </summary>
+        /// <returns></returns>
+        public static string Directory()
+        {
+            return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+        }
+
+        /// <summary>
+        /// Returns the name of the program being executed.
+        /// </summary>
+        /// <returns></returns>
+        public static string Name()
+        {
+            return Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule.ModuleName);
+        }
+
         /// <summary>
         /// List of processes that were started by the program, and their handles.
         /// </summary>
