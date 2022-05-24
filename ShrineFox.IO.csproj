@@ -75,6 +75,7 @@
     <Compile Include="Classes\Forms.cs" />
     <Compile Include="Classes\Python.cs" />
     <Compile Include="Classes\Settings.cs" />
+    <Compile Include="Classes\Theme.cs" />
     <Compile Include="Classes\TreeView.cs" />
     <Compile Include="Classes\Window.cs" />
     <Compile Include="Classes\Output.cs" />

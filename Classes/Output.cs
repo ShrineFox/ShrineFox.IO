@@ -32,6 +32,7 @@ namespace ShrineFox.IO
         /// </summary>
         public static RichTextBox LogControl { get; set; } = new RichTextBox();
 
+        // Skip logging to a control if it fails
         private static bool SkipControlLog { get; set; } = false;
 
         /// <summary>
@@ -42,10 +43,12 @@ namespace ShrineFox.IO
         /// <param name="skipTxtFile">Whether to skip appending text to .txt file.</param>
         public static void Log(string text, ConsoleColor color = new ConsoleColor(), bool skipTxtFile = false)
         {
-                string logText = $"\n[{DateTime.Now.ToString("MM/dd/yyyy HH:mm tt")}] {text}";
+            string logText = $"\n[{DateTime.Now.ToString("MM/dd/yyyy HH:mm tt")}] {text}";
 
-                if (LogPath != "" && !skipTxtFile)
-                    File.AppendAllText(LogPath, logText);
+            if (LogPath != "" && !skipTxtFile)
+                File.AppendAllText(LogPath, logText);
+            if (!SkipControlLog)
+            {
                 try
                 {
                     if (LogControl != new RichTextBox())
@@ -57,13 +60,17 @@ namespace ShrineFox.IO
                         LogControl.AppendText(logText);
                         LogControl.ScrollToCaret();
                         LogControl.ResumeLayout();
-                        //LogControl.SelectionColor = LogControl.ForeColor;
+                        LogControl.ForeColor = Color.Silver;
+                        LogControl.SelectionColor = LogControl.ForeColor;
                     }
-                } catch { SkipControlLog = true; }
-                if (color != new ConsoleColor())
-                    Console.ForegroundColor = color;
-                Console.WriteLine(text);
-                Console.ResetColor();
+                }
+                catch { SkipControlLog = true; }
+            }
+                
+            if (color != new ConsoleColor())
+                Console.ForegroundColor = color;
+            Console.WriteLine(text);
+            Console.ResetColor();
         }
 
         /// <summary>
