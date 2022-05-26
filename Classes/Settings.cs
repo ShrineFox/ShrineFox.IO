@@ -16,10 +16,26 @@ namespace ShrineFox.IO
         public Settings() 
         {
             Data = null;
+            FormSettings = null;
             YmlPath = "";
         }
-        private List<KeyValuePair<object, object>> Data;
+        public List<KeyValuePair<object, object>> Data;
+        public Settings FormSettings;
         public string YmlPath { get; set; } = "";
+
+        public void Initialize(string formName)
+        {
+            // Look for form config yml
+            string formYml = Path.Combine(Path.Combine(Exe.Directory(), "FormSettings"), $"{formName}Controls.yml");
+
+            // Read YML and add results to main Settings object
+            if (File.Exists(formYml))
+            {
+                Settings formSettings = new Settings();
+                formSettings.Load(formYml);
+                FormSettings = formSettings;
+            }
+        }
 
         /// <summary>
         /// Creates a new Settings object from a yml file.
@@ -157,144 +173,126 @@ namespace ShrineFox.IO
         /// <summary>
         /// Create form with controls generated from Yml file.
         /// </summary>
-        public Form Form(string formName = "settingsForm", string formText = "Settings", string formYmlPath = "", int width = 500, int height = 500)
+        public Form Form()
         {
-            Form settingsForm = new Form() { };
-            settingsForm.Name = formName;
-            settingsForm.Text = formText;
-            settingsForm.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
-            settingsForm.ForeColor = System.Drawing.Color.Silver;
-            settingsForm.Width = width;
-            settingsForm.Height = height;
-            // Create TableLayoutPanel to separate form content and buttons
-            TableLayoutPanel tlp_Main = new TableLayoutPanel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, Padding = new Padding(10) };
-            tlp_Main.RowStyles.Add(new RowStyle(SizeType.Percent, 80));
-            tlp_Main.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
-            // Add buttons to bottom of TableLayoutPanel
-            TableLayoutPanel tlp_Buttons = new TableLayoutPanel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, Padding = new Padding(10) };
-            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
-            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
-            Button btnCancel = new Button() { BackColor = settingsForm.BackColor, ForeColor = settingsForm.ForeColor, DialogResult = DialogResult.Cancel, FlatStyle = FlatStyle.Flat, Dock = DockStyle.Fill };
-            btnCancel.Text = "Cancel";
-            tlp_Buttons.Controls.Add(btnCancel, 1, 0);
-            Button btnSave = new Button() { BackColor = settingsForm.BackColor, ForeColor = settingsForm.ForeColor, DialogResult = DialogResult.Cancel, FlatStyle = FlatStyle.Flat, Dock = DockStyle.Fill };
-            btnSave.Text = "Save";
-            btnSave.DialogResult = DialogResult.OK;
-            tlp_Buttons.Controls.Add(btnSave, 2, 0);
-            tlp_Main.Controls.Add(tlp_Buttons, 0, 1);
-            // Create panel to hold content TableLayoutPanel
-            Panel panel = new Panel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, AutoScroll = true, AutoSize = false };
-            TableLayoutPanel tlp_Content = new TableLayoutPanel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, AutoScroll = false };
-            tlp_Content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
-            tlp_Content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
+            var attributes = FormControlAttributes();
+            // Create base settings form
+            Form settingsForm = Forms.SettingsForm();
+            // Get Content Table Layout Panel object
+            TableLayoutPanel tlp_Content = (TableLayoutPanel)settingsForm.Controls.Find("tlp_Content", true).Single();
 
             int row = 0; // number of rows
 
-            if (string.IsNullOrEmpty(formYmlPath))
-                formYmlPath = Path.Combine(Path.Combine(Exe.Directory(), "FormSettings"), $"{formName}Controls.yml");
-
-            foreach (var ctrlAttributes in GetFormControlAttributes(formYmlPath))
+            // Create a form control for each setting
+            foreach (var attribute in attributes)
             {
-                // Set Control Name and Label
-                string controlName = ctrlAttributes.Item1.ToString();
-                string label = controlName;
-                if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("Label")))
-                    label = ctrlAttributes.Item2.Single(x => x.Item1.Equals("Label")).Item2;
-
-                // Create new label and add to first column of row
-                tlp_Content.Controls.Add(new Label()
+                // Get Form attributes
+                if (attribute.Item1.Equals("Form"))
                 {
-                    Text = label,
-                    Name = $"lbl_{controlName}",
-                    Tag = controlName,
-                    Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
-                    AutoSize = true,
-                    Anchor = AnchorStyles.Left
-                }, 0, row);
-
-                // Create control
-                if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("ControlType")))
+                    settingsForm.Name = attribute.Item2.Single(x => x.Item1.Equals("Name")).Item2;
+                    settingsForm.Text = attribute.Item2.Single(x => x.Item1.Equals("Text")).Item2;
+                    settingsForm.Width = Convert.ToInt32(attribute.Item2.Single(x => x.Item1.Equals("Width")).Item2);
+                    settingsForm.Height = Convert.ToInt32(attribute.Item2.Single(x => x.Item1.Equals("Height")).Item2);
+                }
+                else
                 {
-                    // Get attributes
-                    string defaultValue = "";
-                    if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("DefaultValue")))
-                        defaultValue = ctrlAttributes.Item2.Single(x => x.Item1.Equals("DefaultValue")).Item2;
-                    bool readOnly = false;
-                    if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("ReadOnly")))
-                        readOnly = Convert.ToBoolean(ctrlAttributes.Item2.Single(x => x.Item1.Equals("ReadOnly")).Item2);
-                    bool multiline = false;
-                    if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("MultiLine")))
-                        multiline = Convert.ToBoolean(ctrlAttributes.Item2.Single(x => x.Item1.Equals("MultiLine")).Item2);
-                    string clickEvent = "";
-                    if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("ClickEvent")))
-                        clickEvent = ctrlAttributes.Item2.Single(x => x.Item1.Equals("ClickEvent")).Item2;
+                    // Set Control Name and Label
+                    string controlName = attribute.Item1.ToString();
+                    string label = controlName;
 
-                    // Get control type
-                    switch (ctrlAttributes.Item2.Single(x => x.Item1.Equals("ControlType")).Item2)
+                    // Get label text associated with form control
+                    if (attribute.Item2.Any(x => x.Item1.Equals("Label")))
+                        label = attribute.Item2.Single(x => x.Item1.Equals("Label")).Item2;
+
+                    // Create new label and add to first column of row
+                    tlp_Content.Controls.Add(new Label()
                     {
-                        case "TextBox":
-                            // Create new textbox
-                            TextBox txtBox = new TextBox()
-                            {
-                                Text = defaultValue,
-                                Tag = controlName,
-                                Name = $"txtBox_{controlName}",
-                                Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
-                                BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
-                                ForeColor = System.Drawing.Color.White,
-                                BorderStyle = BorderStyle.FixedSingle,
-                                Width = width - 50
-                            };
-                            // Apply attributes
-                            if (readOnly)
-                                txtBox.ReadOnly = true;
-                            if (multiline)
-                            {
-                                txtBox.Multiline = true;
-                                txtBox.Height = 100;
-                            }
-                            if (clickEvent == "FolderPath_Click")
-                                txtBox.Click += Forms.FolderPath_Click;
-                            else if (clickEvent == "FilePath_Click")
-                                txtBox.Click += Forms.FilePath_Click;
-                            // Add textbox to second column of row
-                            tlp_Content.Controls.Add(txtBox, 1, row);
-                            break;
-                        case "ComboBox":
-                            // Create new combobox
-                            ComboBox comboBox = new ComboBox()
-                            {
-                                Tag = controlName,
-                                Name = $"comboBox_{controlName}",
-                                Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
-                                BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
-                                ForeColor = System.Drawing.Color.White,
-                                DropDownStyle = ComboBoxStyle.DropDownList,
-                                Width = width - 50
-                            };
-                            // Add options
-                            List<string> options = new List<string>();
-                            if (ctrlAttributes.Item2.Any(x => x.Item1.Equals("Options")))
-                                options = ctrlAttributes.Item2.Single(x => x.Item1.Equals("Options")).Item2.Split('|').ToList();
-                            foreach (var item in options)
-                                comboBox.Items.Add(item);
-                            // Select default option
-                            if (defaultValue != "")
-                                comboBox.SelectedIndex = comboBox.Items.IndexOf(defaultValue);
-                            // Add textbox to second column of row
-                            tlp_Content.Controls.Add(comboBox, 1, row);
-                            break;
+                        Text = label,
+                        Name = $"lbl_{controlName}",
+                        Tag = controlName,
+                        Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
+                        AutoSize = true,
+                        Anchor = AnchorStyles.Left
+                    }, 0, row);
+
+                    // Create form control
+                    if (attribute.Item2.Any(x => x.Item1.Equals("ControlType")))
+                    {
+                        // Get attributes
+                        string defaultValue = "";
+                        if (attribute.Item2.Any(x => x.Item1.Equals("DefaultValue")))
+                            defaultValue = attribute.Item2.Single(x => x.Item1.Equals("DefaultValue")).Item2;
+                        bool readOnly = false;
+                        if (attribute.Item2.Any(x => x.Item1.Equals("ReadOnly")))
+                            readOnly = Convert.ToBoolean(attribute.Item2.Single(x => x.Item1.Equals("ReadOnly")).Item2);
+                        bool multiline = false;
+                        if (attribute.Item2.Any(x => x.Item1.Equals("MultiLine")))
+                            multiline = Convert.ToBoolean(attribute.Item2.Single(x => x.Item1.Equals("MultiLine")).Item2);
+                        string clickEvent = "";
+                        if (attribute.Item2.Any(x => x.Item1.Equals("ClickEvent")))
+                            clickEvent = attribute.Item2.Single(x => x.Item1.Equals("ClickEvent")).Item2;
+
+                        // Get control type
+                        switch (attribute.Item2.Single(x => x.Item1.Equals("ControlType")).Item2)
+                        {
+                            case "TextBox":
+                                // Create new textbox
+                                TextBox txtBox = new TextBox()
+                                {
+                                    Text = defaultValue,
+                                    Tag = controlName,
+                                    Name = $"txtBox_{controlName}",
+                                    Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
+                                    BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
+                                    ForeColor = System.Drawing.Color.White,
+                                    BorderStyle = BorderStyle.FixedSingle,
+                                    Width = settingsForm.Width - 50
+                                };
+                                // Apply attributes
+                                if (readOnly)
+                                    txtBox.ReadOnly = true;
+                                if (multiline)
+                                {
+                                    txtBox.Multiline = true;
+                                    txtBox.Height = 100;
+                                }
+                                if (clickEvent == "FolderPath_Click")
+                                    txtBox.Click += Forms.FolderPath_Click;
+                                else if (clickEvent == "FilePath_Click")
+                                    txtBox.Click += Forms.FilePath_Click;
+                                // Add textbox to second column of row
+                                tlp_Content.Controls.Add(txtBox, 1, row);
+                                break;
+                            case "ComboBox":
+                                // Create new combobox
+                                ComboBox comboBox = new ComboBox()
+                                {
+                                    Tag = controlName,
+                                    Name = $"comboBox_{controlName}",
+                                    Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
+                                    BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
+                                    ForeColor = System.Drawing.Color.White,
+                                    DropDownStyle = ComboBoxStyle.DropDownList,
+                                    Width = settingsForm.Width - 50
+                                };
+                                // Add options
+                                List<string> options = new List<string>();
+                                if (attribute.Item2.Any(x => x.Item1.Equals("Options")))
+                                    options = attribute.Item2.Single(x => x.Item1.Equals("Options")).Item2.Split('|').ToList();
+                                foreach (var item in options)
+                                    comboBox.Items.Add(item);
+                                // Select default option
+                                if (defaultValue != "")
+                                    comboBox.SelectedIndex = comboBox.Items.IndexOf(defaultValue);
+                                // Add textbox to second column of row
+                                tlp_Content.Controls.Add(comboBox, 1, row);
+                                break;
+                        }
+                        row++;
                     }
-                    row++;
                 }
             }
-
-            // Add controls to form
-            panel.Controls.Add(tlp_Content);
-            tlp_Main.Controls.Add(panel);
-            settingsForm.Controls.Add(tlp_Main);
-
+            
             return settingsForm;
         }
 
@@ -303,41 +301,33 @@ namespace ShrineFox.IO
         /// </summary>
         /// <param name="yml">Path to the .yml to get values from.</param>
         /// <returns></returns>
-        private static List<Tuple<string, List<Tuple<string, string>>>> GetFormControlAttributes(string ymlPath)
+        private List<Tuple<string, List<Tuple<string, string>>>> FormControlAttributes()
         {
+            // Createss a blank list of pairs of control names and their keys/values
             List<Tuple<string, List<Tuple<string, string>>>> formCtrlAttributes = new List<Tuple<string, List<Tuple<string, string>>>>();
 
-            // Read form control YML file that corresponds to settings object
-            Settings formSettings = new Settings();
-            if (File.Exists(ymlPath))
+            foreach (var formSetting in FormSettings.Data)
             {
-                formSettings.Load(ymlPath);
-
-                foreach (var formSetting in formSettings.Data)
+                string controlName = formSetting.Key.ToString();
+                List<Tuple<string, string>> formCtrlAttribute = new List<Tuple<string, string>>();
+                foreach (var attribute in (List<object>)formSetting.Value)
                 {
-                    string controlName = formSetting.Key.ToString();
-                    List<Tuple<string, string>> formCtrlAttribute = new List<Tuple<string, string>>();
-                    foreach (var attribute in (List<object>)formSetting.Value)
+                    var attributeData = (List<object>)attribute;
+                    string key = attributeData[0].ToString();
+                    string value = attributeData[1].ToString();
+                    // Create list of combobox options separated by | character
+                    if (attributeData[0].ToString().Equals("Options"))
                     {
-                        var attributeData = (List<object>)attribute;
-                        string key = attributeData[0].ToString();
-                        string value = attributeData[1].ToString();
-                        // Create list of combobox options separated by | character
-                        if (attributeData[0].ToString().Equals("Options"))
-                        {
-                            string options = "";
-                            foreach (var item in (List<object>)attributeData[1])
-                                options += $"{item.ToString()}|";
-                            value = options.TrimEnd('|');
-                        }
-
-                        formCtrlAttribute.Add(new Tuple<string, string>(key, value));
+                        string options = "";
+                        foreach (var item in (List<object>)attributeData[1])
+                            options += $"{item.ToString()}|";
+                        value = options.TrimEnd('|');
                     }
-                    formCtrlAttributes.Add(new Tuple<string, List<Tuple<string, string>>>(controlName, formCtrlAttribute));
+
+                    formCtrlAttribute.Add(new Tuple<string, string>(key, value));
                 }
+                formCtrlAttributes.Add(new Tuple<string, List<Tuple<string, string>>>(controlName, formCtrlAttribute));
             }
-            else
-                Output.Log($"[ERROR] Failed to load Form data: \"{ymlPath}\"", ConsoleColor.Red);
 
             return formCtrlAttributes;
         }

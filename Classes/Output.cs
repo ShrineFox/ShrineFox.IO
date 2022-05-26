@@ -27,44 +27,45 @@ namespace ShrineFox.IO
         public static bool VerboseLogging { get; set; } = false;
 
         /// <summary>
+        /// The color to use for console/form control log text when not manually specified.
+        /// </summary>
+        public static ConsoleColor DefaultColor { get; set; } = ConsoleColor.White;
+
+        /// <summary>
         /// The form control to output text to.
         /// Must be set in order for log text to appear in form.
         /// </summary>
         public static RichTextBox LogControl { get; set; } = new RichTextBox();
 
-        // Skip logging to a control if it fails
-        private static bool SkipControlLog { get; set; } = false;
-
         /// <summary>
         /// Logs text with a timestamp to the directory specified by LogPath.
         /// </summary>
         /// <param name="text">The text to log.</param>
-        /// <param name="color">The color of the text in the console/form.</param>
-        /// <param name="skipTxtFile">Whether to skip appending text to .txt file.</param>
-        public static void Log(string text, ConsoleColor color = new ConsoleColor(), bool skipTxtFile = false)
+        /// <param name="color">The color of the text in the console/form. Will use DefaultColor if not specified.</param>
+        public static void Log(string text, ConsoleColor color = new ConsoleColor())
         {
+            // Add timestamp before text
             string logText = $"\n[{DateTime.Now.ToString("MM/dd/yyyy HH:mm tt")}] {text}";
 
-            if (LogPath != "" && !skipTxtFile)
+            // Output to txt file if one is specified
+            if (LogPath != "")
                 File.AppendAllText(LogPath, logText);
-            if (!SkipControlLog)
+
+            // Set the color to the default color unless one is specified
+            if (color == new ConsoleColor())
+                color = DefaultColor;
+
+            // Append text to form control if specified
+            if (LogControl != new RichTextBox())
             {
-                try
-                {
-                    if (LogControl != new RichTextBox())
-                    {
-                        LogControl.SuspendLayout();
-                        LogControl.SelectionStart = LogControl.TextLength;
-                        LogControl.SelectionLength = 0;
-                        LogControl.SelectionColor = FromColor(color);
-                        LogControl.AppendText(logText);
-                        LogControl.ScrollToCaret();
-                        LogControl.ResumeLayout();
-                        LogControl.ForeColor = Color.Silver;
-                        LogControl.SelectionColor = LogControl.ForeColor;
-                    }
-                }
-                catch { SkipControlLog = true; }
+                // Set color of appended text
+                LogControl.SuspendLayout();
+                LogControl.SelectionStart = LogControl.TextLength;
+                LogControl.SelectionLength = 0;
+                LogControl.SelectionColor = FromColor(color);
+                LogControl.AppendText(logText);
+                LogControl.ScrollToCaret();
+                LogControl.ResumeLayout();
             }
                 
             if (color != new ConsoleColor())
@@ -74,15 +75,14 @@ namespace ShrineFox.IO
         }
 
         /// <summary>
-        /// If VerboseLogging is set to true, logs text with a timestamp to the directory specified by LogPath .
+        /// If VerboseLogging is set to true, logs text with a timestamp to the directory specified by LogPath.
         /// </summary>
         /// <param name="text">The text to log.</param>
         /// <param name="color">The color of the text in the console/form.</param>
-        /// <param name="skipTxtFile">Whether to skip appending text to .txt file.</param>
-        public static void VerboseLog(string text, ConsoleColor color = new ConsoleColor(), bool skipTxtFile = false)
+        public static void VerboseLog(string text, ConsoleColor color = new ConsoleColor())
         {
             if (VerboseLogging == true)
-                Log(text, color, skipTxtFile);
+                Log(text, color);
         }
 
         // Convert ConsoleColor to Color

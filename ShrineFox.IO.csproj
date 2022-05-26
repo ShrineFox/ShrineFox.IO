@@ -80,6 +80,7 @@
     <Compile Include="Classes\Window.cs" />
     <Compile Include="Classes\Output.cs" />
     <Compile Include="Classes\Exe.cs" />
+    <Compile Include="Classes\Yml.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

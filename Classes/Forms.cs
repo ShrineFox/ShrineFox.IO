@@ -36,6 +36,42 @@ namespace ShrineFox.IO
 
     public class Forms
     {
+        public static Form SettingsForm()
+        {
+            Form settingsForm = new Form() { };
+            settingsForm.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            settingsForm.ForeColor = System.Drawing.Color.Silver;
+            // Create TableLayoutPanel to separate form content and buttons
+            TableLayoutPanel tlp_Main = new TableLayoutPanel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, Padding = new Padding(10) };
+            tlp_Main.RowStyles.Add(new RowStyle(SizeType.Percent, 80));
+            tlp_Main.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
+            // Add buttons to bottom of TableLayoutPanel
+            TableLayoutPanel tlp_Buttons = new TableLayoutPanel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, Padding = new Padding(10) };
+            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+            tlp_Buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+            Button btnCancel = new Button() { BackColor = settingsForm.BackColor, ForeColor = settingsForm.ForeColor, DialogResult = DialogResult.Cancel, FlatStyle = FlatStyle.Flat, Dock = DockStyle.Fill };
+            btnCancel.Text = "Cancel";
+            tlp_Buttons.Controls.Add(btnCancel, 1, 0);
+            Button btnSave = new Button() { BackColor = settingsForm.BackColor, ForeColor = settingsForm.ForeColor, DialogResult = DialogResult.Cancel, FlatStyle = FlatStyle.Flat, Dock = DockStyle.Fill };
+            btnSave.Text = "Save";
+            btnSave.DialogResult = DialogResult.OK;
+            tlp_Buttons.Controls.Add(btnSave, 2, 0);
+            tlp_Main.Controls.Add(tlp_Buttons, 0, 1);
+            // Create panel to hold content TableLayoutPanel
+            Panel panel = new Panel() { BackColor = settingsForm.BackColor, Dock = DockStyle.Fill, AutoScroll = true, AutoSize = false };
+            TableLayoutPanel tlp_Content = new TableLayoutPanel() { Name = "tlp_Content", BackColor = settingsForm.BackColor, Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, AutoScroll = false };
+            tlp_Content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+            tlp_Content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
+
+            // Add controls to form
+            panel.Controls.Add(tlp_Content);
+            tlp_Main.Controls.Add(panel);
+            settingsForm.Controls.Add(tlp_Main);
+
+            return settingsForm;
+        }
+
         public static void FolderPath_Click(object sender, EventArgs e)
         {
             TextBox txtBox = (TextBox)sender;
