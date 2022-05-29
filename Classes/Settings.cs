@@ -119,6 +119,8 @@ namespace ShrineFox.IO
 
                 var serializer = new SerializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build();
                 var yamlTxt = serializer.Serialize(dictionary);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(YmlPath));
                 using (FileSys.WaitForFile(YmlPath)) { };
                 File.WriteAllText(YmlPath, yamlTxt);
 
@@ -139,14 +141,9 @@ namespace ShrineFox.IO
             {
                 for (int i = 0; i < Data.Count; i++)
                 {
-                    foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
+                    foreach (TextBox txtBox in form.GetAllControls<TextBox>())
                         if (Data[i].Key.Equals(txtBox.Tag))
-                        {
-                            if (ValidateSetting(txtBox.Tag.ToString(), txtBox.Text))
-                                Data[i] = new KeyValuePair<object, object>(Data[i].Key, txtBox.Text);
-                            else
-                                txtBox.BorderColor = Color.Red;
-                        }
+                            Data[i] = new KeyValuePair<object, object>(Data[i].Key, txtBox.Text);
                             
                     foreach (ComboBox comboBox in form.GetAllControls<ComboBox>())
                         if (Data[i].Key.Equals(comboBox.Tag))
@@ -164,18 +161,18 @@ namespace ShrineFox.IO
         /// <param name="form">Form to get settings values from.</param>
         public bool ValidateSettings(Form form)
         {
-            foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
+            Graphics g = form.CreateGraphics();
+            foreach (TextBox txtBox in form.GetAllControls<TextBox>())
             {
-                if (ValidateSetting(txtBox.Tag.ToString(), txtBox.Text))
+                if (!ValidateSetting(txtBox.Tag.ToString(), txtBox.Text))
                 {
-                    txtBox.BorderColor = Color.Red;
+                    txtBox.ForeColor = Color.Red;
                     return false;
                 }
                 else
-                {
-                    txtBox.BorderColor = Color.Green;
-                }
+                    txtBox.ForeColor = Color.Green;
             }
+            Output.VerboseLog($"Successfully validated settings.", ConsoleColor.Green);
             return true;
         }
 
@@ -187,7 +184,7 @@ namespace ShrineFox.IO
         {
             if (Data != null)
             {
-                foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
+                foreach (TextBox txtBox in form.GetAllControls<TextBox>())
                     if (Data.Any(x => x.Key.ToString().Equals(txtBox.Tag)))
                         txtBox.Text = Data.Single(x => x.Key.ToString().Equals(txtBox.Tag)).Value.ToString();
                 foreach (ComboBox comboBox in form.GetAllControls<ComboBox>())
@@ -202,22 +199,33 @@ namespace ShrineFox.IO
         /// <summary>
         /// Update form controls with current values of Settings object
         /// </summary>
-        public bool ValidateSetting(string key, string value)
+        public bool ValidateSetting(string controlName, string controlValue)
         {
             if (FormSettings != null)
             {
-                var formCtrl = FormSettings.Data.Single(x => x.Key.Equals(key));
+                KeyValuePair<object, object> formCtrlAttribute = FormSettings.Data.Single(x => x.Key.Equals(controlName));
+                foreach (dynamic attribute in (ICollection<object>)formCtrlAttribute.Value)
+                {
+                    if (attribute[0].ToString() == "Required" && attribute[1].ToString() == "true")
+                    {
+                        if (string.IsNullOrEmpty(controlValue))
+                        {
+                            Output.VerboseLog($"Required field \"{controlName}\" has null or empty value: \"{controlValue}\"", ConsoleColor.Red);
+                            return false;
+                        }
 
-                if (formCtrl.Key.ToString() == "Required" && formCtrl.Value.ToString() == "true")
-                {
-                    if (string.IsNullOrEmpty(value))
-                        return false;
+                    }
+                    if (attribute[0].ToString() == "AlphanumericOnly" && attribute[1].ToString() == "true")
+                    {
+                        if (!Regex.IsMatch(controlValue, "^[a-zA-Z0-9-_ .]*$"))
+                        {
+                            Output.VerboseLog($"Alphanumeric-only field \"{controlName}\" has invalid value: \"{controlValue}\"", ConsoleColor.Red);
+                            return false;
+                        }
+                    }
                 }
-                if (formCtrl.Key.ToString() == "AlphanumericOnly" && formCtrl.Value.ToString() == "true")
-                {
-                    if (!Regex.IsMatch(value, "^[a-zA-Z0-9-_ .]*$"))
-                        return false;
-                }
+                Output.VerboseLog($"Field \"{controlName}\" has valid value: \"{controlValue}\"", ConsoleColor.Green);
+                return true;
             }
             else
             {
@@ -225,7 +233,6 @@ namespace ShrineFox.IO
                     $"FormSettings object was null.", ConsoleColor.Red);
                 return false;
             }
-            return true;
         }
 
         /// <summary>
@@ -303,7 +310,7 @@ namespace ShrineFox.IO
                         {
                             case "TextBox":
                                 // Create new textbox
-                                SFTextBox txtBox = new SFTextBox()
+                                TextBox txtBox = new TextBox()
                                 {
                                     Text = defaultValue,
                                     Tag = controlName,
@@ -312,7 +319,6 @@ namespace ShrineFox.IO
                                     BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
                                     ForeColor = System.Drawing.Color.White,
                                     BorderStyle = BorderStyle.FixedSingle,
-                                    BorderColor = Color.White,
                                     Width = settingsForm.Width - 50
                                 };
                                 // Apply attributes
@@ -371,10 +377,10 @@ namespace ShrineFox.IO
             Button btn = (Button)sender;
             Form form = btn.FindForm();
 
-            //if (ValidateSettings(form))
+            if (ValidateSettings(form))
             {
-                form.DialogResult = DialogResult.OK;
                 UpdateSettings(form);
+                form.DialogResult = DialogResult.OK;
             }
         }
 

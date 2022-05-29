@@ -11,7 +11,8 @@ namespace ShrineFox.IO
 {
     public class TreeViewBuilder
     {
-        public static ImageList ImageList = new ImageList();
+        public static ImageList ImageList = new ImageList() { ColorDepth = ColorDepth.Depth32Bit };
+        public static List<KeyValuePair<string,string>> ExtensionList = new List<KeyValuePair<string, string>>();
 
         public static void BuildTree(DirectoryInfo directoryInfo, TreeNodeCollection nodes)
         {
@@ -20,6 +21,7 @@ namespace ShrineFox.IO
                 path += ".folder";
             // Set icon
             TreeNode curNode = nodes.Add(directoryInfo.FullName, directoryInfo.Name, GetIcon(path), GetIcon(path));
+            curNode.TreeView.ImageList = ImageList;
             // Add subdirectories
             foreach (DirectoryInfo subdir in directoryInfo.GetDirectories())
                 BuildTree(subdir, curNode.Nodes);
@@ -28,22 +30,20 @@ namespace ShrineFox.IO
                 curNode.Nodes.Add(file.FullName, file.Name, GetIcon(file.FullName), GetIcon(file.FullName));
         }
 
-        public static void SetIcon(Image img, string extensions)
+        public static void SetIcon(string imgPath, string extensions)
         {
-            img.Tag = extensions;
-            ImageList.Images.Add(img);
+            ExtensionList.Add(new KeyValuePair<string, string>(imgPath, extensions));
+            ImageList.Images.Add(Image.FromFile(imgPath));
         }
 
         private static int GetIcon(string ext)
         {
             ext = Path.GetExtension(ext).ToLower();
-            for (int i = 0; i < ImageList.Images.Count; i++)
+            for (int i = 0; i < ExtensionList.Count; i++)
             {
-                foreach (string tag in ImageList.Images[i].Tag.ToString().Split(' '))
-                {
-                    if (tag.ToLower().Trim().Equals(ext))
-                        return i;
-                }
+                foreach (var splitExt in ExtensionList[i].Value.Split(' '))
+                if (splitExt.ToLower().Trim().Equals(ext))
+                    return i;
             }
             return 0;
         }
