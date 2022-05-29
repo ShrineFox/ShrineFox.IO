@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -137,9 +139,15 @@ namespace ShrineFox.IO
             {
                 for (int i = 0; i < Data.Count; i++)
                 {
-                    foreach (TextBox txtBox in form.GetAllControls<TextBox>())
+                    foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
                         if (Data[i].Key.Equals(txtBox.Tag))
-                            Data[i] = new KeyValuePair<object, object>(Data[i].Key, txtBox.Text);
+                        {
+                            if (ValidateSetting(txtBox.Tag.ToString(), txtBox.Text))
+                                Data[i] = new KeyValuePair<object, object>(Data[i].Key, txtBox.Text);
+                            else
+                                txtBox.BorderColor = Color.Red;
+                        }
+                            
                     foreach (ComboBox comboBox in form.GetAllControls<ComboBox>())
                         if (Data[i].Key.Equals(comboBox.Tag))
                             Data[i] = new KeyValuePair<object, object>(Data[i].Key, comboBox.SelectedItem.ToString());
@@ -151,6 +159,27 @@ namespace ShrineFox.IO
         }
 
         /// <summary>
+        /// Check if settings form has valid values.
+        /// </summary>
+        /// <param name="form">Form to get settings values from.</param>
+        public bool ValidateSettings(Form form)
+        {
+            foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
+            {
+                if (ValidateSetting(txtBox.Tag.ToString(), txtBox.Text))
+                {
+                    txtBox.BorderColor = Color.Red;
+                    return false;
+                }
+                else
+                {
+                    txtBox.BorderColor = Color.Green;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Update form controls with current values of Settings object
         /// </summary>
         /// <param name="form">Form to apply settings values to.</param>
@@ -158,7 +187,7 @@ namespace ShrineFox.IO
         {
             if (Data != null)
             {
-                foreach (TextBox txtBox in form.GetAllControls<TextBox>())
+                foreach (SFTextBox txtBox in form.GetAllControls<SFTextBox>())
                     if (Data.Any(x => x.Key.ToString().Equals(txtBox.Tag)))
                         txtBox.Text = Data.Single(x => x.Key.ToString().Equals(txtBox.Tag)).Value.ToString();
                 foreach (ComboBox comboBox in form.GetAllControls<ComboBox>())
@@ -171,6 +200,35 @@ namespace ShrineFox.IO
         }
 
         /// <summary>
+        /// Update form controls with current values of Settings object
+        /// </summary>
+        public bool ValidateSetting(string key, string value)
+        {
+            if (FormSettings != null)
+            {
+                var formCtrl = FormSettings.Data.Single(x => x.Key.Equals(key));
+
+                if (formCtrl.Key.ToString() == "Required" && formCtrl.Value.ToString() == "true")
+                {
+                    if (string.IsNullOrEmpty(value))
+                        return false;
+                }
+                if (formCtrl.Key.ToString() == "AlphanumericOnly" && formCtrl.Value.ToString() == "true")
+                {
+                    if (!Regex.IsMatch(value, "^[a-zA-Z0-9-_ .]*$"))
+                        return false;
+                }
+            }
+            else
+            {
+                Output.Log($"[ERROR] Failed to check attributes of FormSettings object." +
+                    $"FormSettings object was null.", ConsoleColor.Red);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Create form with controls generated from Yml file.
         /// </summary>
         public Form Form()
@@ -180,6 +238,9 @@ namespace ShrineFox.IO
             Form settingsForm = Forms.SettingsForm();
             // Get Content Table Layout Panel object
             TableLayoutPanel tlp_Content = (TableLayoutPanel)settingsForm.Controls.Find("tlp_Content", true).Single();
+            // Get Save Button object
+            Button btn_Save = (Button)settingsForm.Controls.Find("btn_Save", true).Single();
+            btn_Save.Click += SaveButton_Clicked;
 
             int row = 0; // number of rows
 
@@ -200,21 +261,6 @@ namespace ShrineFox.IO
                     string controlName = attribute.Item1.ToString();
                     string label = controlName;
 
-                    // Get label text associated with form control
-                    if (attribute.Item2.Any(x => x.Item1.Equals("Label")))
-                        label = attribute.Item2.Single(x => x.Item1.Equals("Label")).Item2;
-
-                    // Create new label and add to first column of row
-                    tlp_Content.Controls.Add(new Label()
-                    {
-                        Text = label,
-                        Name = $"lbl_{controlName}",
-                        Tag = controlName,
-                        Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
-                        AutoSize = true,
-                        Anchor = AnchorStyles.Left
-                    }, 0, row);
-
                     // Create form control
                     if (attribute.Item2.Any(x => x.Item1.Equals("ControlType")))
                     {
@@ -228,16 +274,36 @@ namespace ShrineFox.IO
                         bool multiline = false;
                         if (attribute.Item2.Any(x => x.Item1.Equals("MultiLine")))
                             multiline = Convert.ToBoolean(attribute.Item2.Single(x => x.Item1.Equals("MultiLine")).Item2);
+                        bool required = false;
+                        if (attribute.Item2.Any(x => x.Item1.Equals("Required")))
+                            required = Convert.ToBoolean(attribute.Item2.Single(x => x.Item1.Equals("Required")).Item2);
                         string clickEvent = "";
                         if (attribute.Item2.Any(x => x.Item1.Equals("ClickEvent")))
                             clickEvent = attribute.Item2.Single(x => x.Item1.Equals("ClickEvent")).Item2;
+
+                        // Get label text associated with form control
+                        if (attribute.Item2.Any(x => x.Item1.Equals("Label")))
+                            label = attribute.Item2.Single(x => x.Item1.Equals("Label")).Item2;
+                        if (required)
+                            label += "*";
+
+                        // Create new label and add to first column of row
+                        tlp_Content.Controls.Add(new Label()
+                        {
+                            Text = label,
+                            Name = $"lbl_{controlName}",
+                            Tag = controlName,
+                            Font = new System.Drawing.Font("Microsoft Sans Serif", 10F),
+                            AutoSize = true,
+                            Anchor = AnchorStyles.Left
+                        }, 0, row);
 
                         // Get control type
                         switch (attribute.Item2.Single(x => x.Item1.Equals("ControlType")).Item2)
                         {
                             case "TextBox":
                                 // Create new textbox
-                                TextBox txtBox = new TextBox()
+                                SFTextBox txtBox = new SFTextBox()
                                 {
                                     Text = defaultValue,
                                     Tag = controlName,
@@ -246,6 +312,7 @@ namespace ShrineFox.IO
                                     BackColor = System.Drawing.Color.FromArgb(20, 20, 20),
                                     ForeColor = System.Drawing.Color.White,
                                     BorderStyle = BorderStyle.FixedSingle,
+                                    BorderColor = Color.White,
                                     Width = settingsForm.Width - 50
                                 };
                                 // Apply attributes
@@ -292,8 +359,23 @@ namespace ShrineFox.IO
                     }
                 }
             }
-            
+
+            // Fill default values with current settings values
+            UpdateForm(settingsForm);
+
             return settingsForm;
+        }
+
+        private void SaveButton_Clicked(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            Form form = btn.FindForm();
+
+            //if (ValidateSettings(form))
+            {
+                form.DialogResult = DialogResult.OK;
+                UpdateSettings(form);
+            }
         }
 
         /// <summary>
@@ -305,6 +387,8 @@ namespace ShrineFox.IO
         {
             // Createss a blank list of pairs of control names and their keys/values
             List<Tuple<string, List<Tuple<string, string>>>> formCtrlAttributes = new List<Tuple<string, List<Tuple<string, string>>>>();
+            // Creates a blank Data object for default values
+            List<KeyValuePair<object, object>> data = new List<KeyValuePair<object, object>>();
 
             foreach (var formSetting in FormSettings.Data)
             {
@@ -315,6 +399,11 @@ namespace ShrineFox.IO
                     var attributeData = (List<object>)attribute;
                     string key = attributeData[0].ToString();
                     string value = attributeData[1].ToString();
+
+                    // Add to default values list
+                    if (key == "DefaultValue")
+                        data.Add(new KeyValuePair<object, object>(controlName, value));
+
                     // Create list of combobox options separated by | character
                     if (attributeData[0].ToString().Equals("Options"))
                     {
@@ -328,6 +417,9 @@ namespace ShrineFox.IO
                 }
                 formCtrlAttributes.Add(new Tuple<string, List<Tuple<string, string>>>(controlName, formCtrlAttribute));
             }
+            // Set Data object to default values if null or empty
+            if (Data == null || Data.Count == 0)
+                Data = data;
 
             return formCtrlAttributes;
         }
