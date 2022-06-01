@@ -48,6 +48,9 @@
     <Reference Include="Microsoft.WindowsAPICodePack.ShellExtensions, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\ShrineForm\packages\WindowsAPICodePack.1.1.2\lib\Microsoft.WindowsAPICodePack.ShellExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\ShrineForm\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -73,6 +76,7 @@
     <Compile Include="Classes\Endian\Unsafe.cs" />
     <Compile Include="Classes\FileSys.cs" />
     <Compile Include="Classes\Forms.cs" />
+    <Compile Include="Classes\Json.cs" />
     <Compile Include="Classes\Python.cs" />
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\Theme.cs" />
