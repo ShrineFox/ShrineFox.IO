@@ -318,7 +318,7 @@ namespace ShrineFox.IO
             Write( 0 );
         }
 
-        public void PerformScheduledWrites()
+        public void PerWinFormscheduledWrites()
         {
             DoScheduledOffsetWrites();
             DoScheduledLateOffsetWrites();

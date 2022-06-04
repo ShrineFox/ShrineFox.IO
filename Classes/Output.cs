@@ -67,10 +67,10 @@ namespace ShrineFox.IO
                 LogControl.ScrollToCaret();
                 LogControl.ResumeLayout();
             }
-                
+
             if (color != new ConsoleColor())
                 Console.ForegroundColor = color;
-            Console.WriteLine(text);
+            Console.Write(logText);
             Console.ResetColor();
         }
 
@@ -96,6 +96,15 @@ namespace ShrineFox.IO
             int b = ((cInt & 1) > 0) ? 64 * brightnessCoefficient : 0;
 
             return Color.FromArgb(r, g, b);
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllocConsole();
+
+        public static bool HasMainWindow()
+        {
+            return (Process.GetCurrentProcess().MainWindowHandle != IntPtr.Zero);
         }
     }
 }

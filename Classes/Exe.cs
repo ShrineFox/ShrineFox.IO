@@ -42,6 +42,23 @@ namespace ShrineFox.IO
             return Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule.ModuleName);
         }
 
+        public static Type GetType(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Reverse()
+                .Select(assembly => assembly.GetType(name))
+                .FirstOrDefault(t => t != null) ??
+                AppDomain.CurrentDomain.GetAssemblies()
+                .Reverse()
+                .SelectMany(assembly => assembly.GetTypes())
+                .FirstOrDefault(t => t.Name.Contains(name));
+        }
+
+        public static dynamic GetInstance(Type type)
+        {
+            return Activator.CreateInstance(type);
+        }
+
         /// <summary>
         /// List of processes that were started by the program, and their handles.
         /// </summary>
