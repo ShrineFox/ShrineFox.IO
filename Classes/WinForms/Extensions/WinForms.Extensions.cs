@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Security;
 using System.Security.Permissions;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace ShrineFox.IO
 {
@@ -115,6 +117,104 @@ namespace ShrineFox.IO
 
                 return _executablePath;
             }
+        }
+    }
+
+    [ToolboxBitmap(typeof(System.Windows.Forms.TabControl))]
+    public class TabControl : Dotnetrix.Controls.TabControl
+    {
+        private bool m_HideTabs = false;
+
+        [DefaultValue(false)]
+        [RefreshProperties(RefreshProperties.All)]
+        public bool HideTabs
+        {
+            get { return m_HideTabs; }
+            set
+            {
+                if (m_HideTabs == value) return;
+                m_HideTabs = value;
+                if (value == true) this.Multiline = true;
+                this.UpdateStyles();
+            }
+        }
+
+        [RefreshProperties(RefreshProperties.All)]
+        public new bool Multiline
+        {
+            get
+            {
+                if (this.HideTabs) return true;
+                return base.Multiline;
+            }
+            set
+            {
+                if (this.HideTabs)
+                    base.Multiline = true;
+                else
+                    base.Multiline = value;
+            }
+        }
+
+        public override System.Drawing.Rectangle DisplayRectangle
+        {
+            get
+            {
+                if (this.HideTabs)
+                    return new Rectangle(0, 0, Width, Height);
+                else
+                {
+                    int tabStripHeight, itemHeight;
+
+                    if (this.Alignment <= TabAlignment.Bottom)
+                        itemHeight = this.ItemSize.Height;
+                    else
+                        itemHeight = this.ItemSize.Width;
+
+                    if (this.Appearance == TabAppearance.Normal)
+                        tabStripHeight = 5 + (itemHeight * this.RowCount);
+                    else
+                        tabStripHeight = (3 + itemHeight) * this.RowCount;
+
+                    switch (this.Alignment)
+                    {
+                        case TabAlignment.Bottom:
+                            return new Rectangle(4, 4, Width - 8, Height - tabStripHeight - 4);
+                        case TabAlignment.Left:
+                            return new Rectangle(tabStripHeight, 4, Width - tabStripHeight - 4, Height - 8);
+                        case TabAlignment.Right:
+                            return new Rectangle(4, 4, Width - tabStripHeight - 4, Height - 8);
+                        default:
+                            return new Rectangle(4, tabStripHeight, Width - 8, Height - tabStripHeight - 4);
+                    }
+                }
+            }
+        }
+    }
+
+    public class SFRichTextBox : RichTextBox
+    {
+        public SFRichTextBox()
+        {
+            Selectable = true;
+        }
+        const int WM_SETFOCUS = 0x0007;
+        const int WM_KILLFOCUS = 0x0008;
+
+        ///<summary>
+        /// Enables or disables selection highlight. 
+        /// If you set `Selectable` to `false` then the selection highlight
+        /// will be disabled. 
+        /// It's enabled by default.
+        ///</summary>
+        [DefaultValue(true)]
+        public bool Selectable { get; set; }
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_SETFOCUS && Selectable)
+                m.Msg = WM_KILLFOCUS;
+
+            base.WndProc(ref m);
         }
     }
 }
