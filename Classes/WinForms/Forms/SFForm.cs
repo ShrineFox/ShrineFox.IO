@@ -67,24 +67,26 @@ namespace ShrineFox.IO
 
             if (config.FormSettings != null)
             {
-                SetupFormDetails();
-                SetupDynamicControls();
+                var form = config.FormSettings["Form"];
+                SetupFormDetails(form);
+                SetupDynamicControls(form);
+                
             }
-
-            //SetupToolstripRenderer();
         }
 
-        private void SetupFormDetails()
+        private void SetupFormDetails(JToken form)
         {
-            Name = config.FormSettings["Form"].Value<string>("Name");
-            Text = config.FormSettings["Form"].Value<string>("Text");
-            Width = config.FormSettings["Form"].Value<int>("Width");
-            Height = config.FormSettings["Form"].Value<int>("Height");
+            Name = form.Value<string>("Name");
+            Text = form.Value<string>("Text");
+            Width = Convert.ToInt32(form.Value<string>("Width"));
+            Height = Convert.ToInt32(form.Value<string>("Height"));
+            MinimumSize = new System.Drawing.Size(Width, Height);
+            MaximumSize = MinimumSize;
         }
 
-        private void SetupDynamicControls()
+        private void SetupDynamicControls(JToken form)
         {
-            foreach (JProperty ctrl in config.FormSettings["Form"]["Controls"])
+            foreach (JProperty ctrl in form["Controls"])
                 AddControls(ctrl, this);
         }
 
@@ -97,54 +99,63 @@ namespace ShrineFox.IO
         private void AddControl(JObject ctrl, dynamic parent)
         {
             // Get name of parent control
-            string parentName = "";
-            foreach (PropertyDescriptor prop in TypeDescriptor.GetProperties(parent))
-                if (prop.Name == "Name")
-                    parentName = prop.GetValue(parent);
+            string parentName = GetJsonCtrlName(parent);
             // Get type of parent control
-            // Type parentType = ((ObjectHandle)parent).Unwrap().GetType();
+            Type parentType = parent.GetType();
 
             // Get name of control being created
-            var parentNode = (JProperty)ctrl.Parent;
-            string ctrlName = parentNode.Name;
+            string ctrlName = GetJsonCtrlParent(ctrl).Name;
             // Get type of control being created
-            string typeName = ctrl.Value<string>("ControlType");
-            Type type = Exe.GetType(typeName);
+            Type type = GetJsonCtrlType(ctrl);
             // Create new control instance from type
             dynamic newCtrl = Exe.GetInstance(type);
+
             int row = -1;
             int column = -1;
 
-            // For each property of control in json...
+            // Apply special properties of JSON controls
             foreach (JProperty prop in ctrl.Properties())
             {
-                // Set Rows/Columns that this control has
-                if (prop.Name == "Rows" && type == typeof(TableLayoutPanel))
-                    foreach (var value in (JArray)prop.Value)
-                        newCtrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<int>()));
-                else if (prop.Name == "Columns" && type == typeof(TableLayoutPanel))
-                    foreach (var value in (JArray)prop.Value)
-                        newCtrl.RowStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<int>()));
-                // Set Row/Column of parent control that this control gets added to
-                if (prop.Name == "Row")
-                    row = Convert.ToInt32(prop.Value.ToString());
-                if (prop.Name == "Column")
-                    column = Convert.ToInt32(prop.Value.ToString());
+                switch(type.Name)
+                {
+                    case "System.Windows.Forms.TableLayoutPanel":
+                        switch(prop.Name)
+                        {
+                            // Add rows/columns of a given percentage
+                            case "Rows":
+                                CreateTlpRows(newCtrl, prop);
+                                break;
+                            case "Columns":
+                                CreateTlpColumns(newCtrl, prop);
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
 
-                // For each property of control type...
+                // For each property of control Type...
                 foreach (var typeProp in type.GetProperties())
                 {
-                    // Set Name
+                    // Set Control Name & Color Scheme
                     if (typeProp.Name == "Name")
                         typeProp.SetValue(newCtrl, ctrlName);
-                    // If the names match...
-                    if (typeProp.Name == prop.Name)
+                    else if (typeProp.Name == "BackColor")
+                        typeProp.SetValue(newCtrl, BackColor);
+                    else if (typeProp.Name == "ForeColor")
+                        typeProp.SetValue(newCtrl, ForeColor);
+                    else if (typeProp.Name == prop.Name)
                     {
+                        // If the name of the JSON property matches the type property,
+                        // add child controls to control
                         if (typeProp.Name == "Controls")
                             foreach (JProperty nestedCtrl in ctrl["Controls"])
                                 AddControls(nestedCtrl, newCtrl);
                         else
                         {
+                            // Set control property from value of JSON property
                             if (typeProp.PropertyType == typeof(string))
                                 typeProp.SetValue(newCtrl, prop.Value.ToString());
                             else if (typeProp.PropertyType == typeof(int))
@@ -153,16 +164,11 @@ namespace ShrineFox.IO
                                 typeProp.SetValue(newCtrl, Convert.ToBoolean(prop.Value.ToString()));
                         }
                     }
-                    // Set Theme Stuff
-                    if (typeProp.Name == "BackColor")
-                        typeProp.SetValue(newCtrl, BackColor);
-                    if (typeProp.Name == "ForeColor")
-                        typeProp.SetValue(newCtrl, ForeColor);
                 }
             }
 
             // Log info about controls being added
-            string log = $"Adding {typeName.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"" +
+            string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"" +
                 $"\n                        to Control \"{parentName}\"";
             if (row != -1 || column != -1)
                 log += $" (column {column}, row {row})";
@@ -175,6 +181,46 @@ namespace ShrineFox.IO
                 parent.Controls.Add(newCtrl, column, row);
             else
                 parent.Controls.Add(newCtrl);
+        }
+
+        private void CreateTlpColumns(dynamic ctrl, JProperty prop)
+        {
+            foreach (var value in (JArray)prop.Value)
+                ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<int>()));
+        }
+
+        private void CreateTlpRows(dynamic ctrl, JProperty prop)
+        {
+            foreach (var value in (JArray)prop.Value)
+                ctrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<int>()));
+        }
+
+        private int GetPropValueAsInt(JProperty prop)
+        {
+            return Convert.ToInt32(prop.Value.ToString());
+        }
+
+        private JArray GetJToken(JProperty prop)
+        {
+            return (JArray)prop.Value;
+        }
+
+        private JProperty GetJsonCtrlParent(JObject ctrl)
+        {
+            return (JProperty)ctrl.Parent;
+        }
+
+        private Type GetJsonCtrlType(JObject ctrl)
+        {
+            return Exe.GetType(ctrl.Value<string>("ControlType"));
+        }
+
+        private string GetJsonCtrlName(dynamic obj)
+        {
+            foreach (PropertyDescriptor prop in TypeDescriptor.GetProperties(obj))
+                if (prop.Name == "Name")
+                    return prop.GetValue(obj).ToString();
+            return "";
         }
 
         private void SetupMainControls()
