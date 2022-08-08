@@ -55,6 +55,18 @@ namespace ShrineFox.IO
                 .FirstOrDefault(t => t.Name.Contains(name));
         }
 
+        public static Type GetEnumType(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Reverse()
+                .Select(assembly => assembly.GetType(name))
+                .FirstOrDefault(t => t != null && t.IsEnum) ??
+                AppDomain.CurrentDomain.GetAssemblies()
+                .Reverse()
+                .SelectMany(assembly => assembly.GetTypes())
+                .FirstOrDefault(t => t.Name.Contains(name));
+        }
+
         public static dynamic GetInstance(Type type)
         {
             return Activator.CreateInstance(type);

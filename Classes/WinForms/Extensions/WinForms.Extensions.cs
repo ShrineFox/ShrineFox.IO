@@ -75,6 +75,12 @@ namespace ShrineFox.IO
                 if (colNumbers.Contains(panel.GetColumn(c)))
                     c.Visible = true;
         }
+        public static Color StringToColor(string colorStr)
+        {
+            TypeConverter cc = TypeDescriptor.GetConverter(typeof(Color));
+            var result = (Color)cc.ConvertFromString(colorStr);
+            return result;
+        }
     }
 
     // Return the path of the currently executing program

@@ -63,8 +63,6 @@ namespace ShrineFox.IO
 
         private void SetupLayout()
         {
-            SetupMainControls();
-
             if (config.FormSettings != null)
             {
                 var form = config.FormSettings["Form"];
@@ -118,7 +116,7 @@ namespace ShrineFox.IO
             {
                 switch(type.Name)
                 {
-                    case "System.Windows.Forms.TableLayoutPanel":
+                    case "TableLayoutPanel":
                         switch(prop.Name)
                         {
                             // Add rows/columns of a given percentage
@@ -142,10 +140,6 @@ namespace ShrineFox.IO
                     // Set Control Name & Color Scheme
                     if (typeProp.Name == "Name")
                         typeProp.SetValue(newCtrl, ctrlName);
-                    else if (typeProp.Name == "BackColor")
-                        typeProp.SetValue(newCtrl, BackColor);
-                    else if (typeProp.Name == "ForeColor")
-                        typeProp.SetValue(newCtrl, ForeColor);
                     else if (typeProp.Name == prop.Name)
                     {
                         // If the name of the JSON property matches the type property,
@@ -153,6 +147,10 @@ namespace ShrineFox.IO
                         if (typeProp.Name == "Controls")
                             foreach (JProperty nestedCtrl in ctrl["Controls"])
                                 AddControls(nestedCtrl, newCtrl);
+                        else if (typeProp.Name == "BackColor")
+                            typeProp.SetValue(newCtrl, WinFormsExtensions.StringToColor(prop.Value.ToString()));
+                        else if (typeProp.Name == "ForeColor")
+                            typeProp.SetValue(newCtrl, WinFormsExtensions.StringToColor(prop.Value.ToString()));
                         else
                         {
                             // Set control property from value of JSON property
@@ -160,8 +158,12 @@ namespace ShrineFox.IO
                                 typeProp.SetValue(newCtrl, prop.Value.ToString());
                             else if (typeProp.PropertyType == typeof(int))
                                 typeProp.SetValue(newCtrl, Convert.ToInt32(prop.Value.ToString()));
+                            else if (typeProp.PropertyType == typeof(float))
+                                typeProp.SetValue(newCtrl, Convert.ToSingle(prop.Value.ToString()));
                             else if (typeProp.PropertyType == typeof(bool))
                                 typeProp.SetValue(newCtrl, Convert.ToBoolean(prop.Value.ToString()));
+                            else if (typeProp.PropertyType.IsEnum)
+                                typeProp.SetValue(newCtrl, Enum.Parse(typeProp.PropertyType, prop.Value.ToString().Split('.').Last()), null);
                         }
                     }
                 }
@@ -186,13 +188,19 @@ namespace ShrineFox.IO
         private void CreateTlpColumns(dynamic ctrl, JProperty prop)
         {
             foreach (var value in (JArray)prop.Value)
-                ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<int>()));
+            {
+                ctrl.ColumnCount += 1;
+                ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<float>()));
+            }
         }
 
         private void CreateTlpRows(dynamic ctrl, JProperty prop)
         {
             foreach (var value in (JArray)prop.Value)
-                ctrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<int>()));
+            {
+                ctrl.RowCount += 1;
+                ctrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<float>()));
+            }
         }
 
         private int GetPropValueAsInt(JProperty prop)
@@ -221,24 +229,6 @@ namespace ShrineFox.IO
                 if (prop.Name == "Name")
                     return prop.GetValue(obj).ToString();
             return "";
-        }
-
-        private void SetupMainControls()
-        {
-            // Create main TableLayoutPanel
-            TableLayoutPanel tlp_Main = new TableLayoutPanel() { Name = "tlp_Main", BackColor = BackColor, Dock = DockStyle.Fill, Padding = new Padding(10) };
-            tlp_Main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            // Create panel to hold Content TableLayoutPanel
-            Panel panel = new Panel() { BackColor = BackColor, Dock = DockStyle.Fill, AutoScroll = true, AutoSize = false };
-            TableLayoutPanel tlp_Content = new TableLayoutPanel() { Name = "tlp_Content", BackColor = BackColor, Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, AutoScroll = false };
-            tlp_Content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            tlp_Content.RowStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-            // Add controls to form
-            panel.Controls.Add(tlp_Content);
-            tlp_Main.Controls.Add(panel);
-            Controls.Add(tlp_Main);
         }
 
         public void SetupToolstripRenderer()
