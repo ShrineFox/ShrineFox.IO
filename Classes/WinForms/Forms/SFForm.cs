@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.Remoting;
+using System.Drawing;
 
 namespace ShrineFox.IO
 {
@@ -17,16 +18,13 @@ namespace ShrineFox.IO
     {
         Config config;
 
-        public SFForm(string formName = "", string formJson = "", string userJson = "")
+        public SFForm(string formName = "", string formJson = "FormSettings\\MainForm.json", string userJson = "Saved\\MainUserData.json")
         {
-            // Set Form Name
             if (formName != "")
                 Name = formName;
             else
                 Name = Exe.Name();
             Text = Name;
-
-            // Attempt to load config
             config = new Config(userJson, formJson);
 
             SetupForm();
@@ -34,13 +32,22 @@ namespace ShrineFox.IO
 
         private void SetupForm()
         {
+            // Set up default form appearance
             SetupTheme();
             WinForms.SetDefaultIcon();
             SetTreeviewImages();
             SetupLogging();
 
+            // Load user generated layout
             config.Load();
-            SetupLayout();
+            if (config.FormSettings != null)
+            {
+                var formToken = config.FormSettings["Form"];
+                SetupFormDetails(formToken);
+                AddControls(formToken, this);
+            }
+
+            Output.Log("Form Loaded.");
         }
 
         private void SetupTheme()
@@ -55,21 +62,10 @@ namespace ShrineFox.IO
             FormBorderStyle = FormBorderStyle.Sizable;
             MinimumSize = new System.Drawing.Size(640, 360);
             Opacity = 0D;
-            HeaderHeight = -90;
+            HeaderHeight = -50;
             ShowHeader = true;
             ShowLeftRect = false;
             SizeGripStyle = SizeGripStyle.Show;
-        }
-
-        private void SetupLayout()
-        {
-            if (config.FormSettings != null)
-            {
-                var form = config.FormSettings["Form"];
-                SetupFormDetails(form);
-                SetupDynamicControls(form);
-                
-            }
         }
 
         private void SetupFormDetails(JToken form)
@@ -78,128 +74,151 @@ namespace ShrineFox.IO
             Text = form.Value<string>("Text");
             Width = Convert.ToInt32(form.Value<string>("Width"));
             Height = Convert.ToInt32(form.Value<string>("Height"));
-            MinimumSize = new System.Drawing.Size(Width, Height);
-            MaximumSize = MinimumSize;
+            MinimumSize = new System.Drawing.Size(Convert.ToInt32(form.Value<string>("MinWidth")), 
+                Convert.ToInt32(form.Value<string>("MinHeight")));
+            MaximumSize = new System.Drawing.Size(Convert.ToInt32(form.Value<string>("MaxWidth")), 
+                Convert.ToInt32(form.Value<string>("MaxHeight")));
         }
 
-        private void SetupDynamicControls(JToken form)
+        private void AddControls(JToken ctrlToken, dynamic parent)
         {
-            foreach (JProperty ctrl in form["Controls"])
-                AddControls(ctrl, this);
-        }
-
-        private void AddControls(JProperty ctrls, dynamic parent)
-        {
-            foreach (JObject ctrl in ctrls)
-                AddControl(ctrl, parent);
-        }
-
-        private void AddControl(JObject ctrl, dynamic parent)
-        {
-            // Get name of parent control
-            string parentName = GetJsonCtrlName(parent);
-            // Get type of parent control
-            Type parentType = parent.GetType();
-
-            // Get name of control being created
-            string ctrlName = GetJsonCtrlParent(ctrl).Name;
-            // Get type of control being created
-            Type type = GetJsonCtrlType(ctrl);
-            // Create new control instance from type
-            dynamic newCtrl = Exe.GetInstance(type);
-
-            int row = -1;
-            int column = -1;
-
-            // Apply special properties of JSON controls
-            foreach (JProperty prop in ctrl.Properties())
+            foreach (var subCtrl in ctrlToken["Controls"])
             {
-                switch(type.Name)
+                var ctrl = subCtrl.Children().First().Value<JObject>();
+                // Get name of parent control
+                string parentName = GetJsonCtrlName(parent);
+                // Get type of parent control
+                Type parentType = parent.GetType();
+
+                // Get name of control being created
+                string ctrlName = GetJsonCtrlParent(ctrl).Name;
+                // Get type of control being created
+                Type type = GetJsonCtrlType(ctrl);
+                // Create new control instance from type
+                dynamic newCtrl = Exe.GetInstance(type);
+
+                int row = -1;
+                int column = -1;
+
+                // Get a list of the control's Type properties
+                PropertyInfo[] typeProperties = type.GetProperties();
+                // For each property of the control in JSON...
+                foreach (JProperty jsonProperty in ctrl.Properties())
                 {
-                    case "TableLayoutPanel":
-                        switch(prop.Name)
+                    // If there's a Type property with the same name...
+                    if (typeProperties.Any(x => x.Name.Equals(jsonProperty.Name)))
+                    {
+                        // Get the first JSON property that matches
+                        var typeProperty = typeProperties.First(x => x.Name.Equals(jsonProperty.Name));
+
+                        // Assign property value to control
+                        switch (jsonProperty.Name)
                         {
-                            // Add rows/columns of a given percentage
+                            case "Name":
+                                typeProperty.SetValue(newCtrl, ctrlName);
+                                break;
+                            case "Margin":
+                            case "Padding":
+                                SetPadding(typeProperty, jsonProperty, newCtrl);
+                                break;
+                            case "MaximumSize":
+                            case "MinimumSize":
+                                SetSize(typeProperty, jsonProperty, newCtrl);
+                                break;
+                            case "Controls":
+                                AddControls(ctrl, newCtrl);
+                                break;
+                            case "BackColor":
+                            case "ForeColor":
+                                typeProperty.SetValue(newCtrl, WinFormsExtensions.StringToColor(jsonProperty.Value.ToString()));
+                                break;
+                            default:
+                                SetCtrlProperty(typeProperty, jsonProperty, newCtrl);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // Assign certain properties to the control even if names don't match
+                        switch (jsonProperty.Name)
+                        {
+                            case "Row":
+                                row = GetPropValueAsInt(jsonProperty);
+                                break;
+                            case "Column":
+                                column = GetPropValueAsInt(jsonProperty);
+                                break;
                             case "Rows":
-                                CreateTlpRows(newCtrl, prop);
+                                CreateRows(newCtrl, jsonProperty);
                                 break;
                             case "Columns":
-                                CreateTlpColumns(newCtrl, prop);
+                                CreateColumns(newCtrl, jsonProperty);
                                 break;
                             default:
                                 break;
                         }
-                        break;
-                    default:
-                        break;
-                }
-
-                // For each property of control Type...
-                foreach (var typeProp in type.GetProperties())
-                {
-                    // Set Control Name & Color Scheme
-                    if (typeProp.Name == "Name")
-                        typeProp.SetValue(newCtrl, ctrlName);
-                    else if (typeProp.Name == prop.Name)
-                    {
-                        // If the name of the JSON property matches the type property,
-                        // add child controls to control
-                        if (typeProp.Name == "Controls")
-                            foreach (JProperty nestedCtrl in ctrl["Controls"])
-                                AddControls(nestedCtrl, newCtrl);
-                        else if (typeProp.Name == "BackColor")
-                            typeProp.SetValue(newCtrl, WinFormsExtensions.StringToColor(prop.Value.ToString()));
-                        else if (typeProp.Name == "ForeColor")
-                            typeProp.SetValue(newCtrl, WinFormsExtensions.StringToColor(prop.Value.ToString()));
-                        else
-                        {
-                            // Set control property from value of JSON property
-                            if (typeProp.PropertyType == typeof(string))
-                                typeProp.SetValue(newCtrl, prop.Value.ToString());
-                            else if (typeProp.PropertyType == typeof(int))
-                                typeProp.SetValue(newCtrl, Convert.ToInt32(prop.Value.ToString()));
-                            else if (typeProp.PropertyType == typeof(float))
-                                typeProp.SetValue(newCtrl, Convert.ToSingle(prop.Value.ToString()));
-                            else if (typeProp.PropertyType == typeof(bool))
-                                typeProp.SetValue(newCtrl, Convert.ToBoolean(prop.Value.ToString()));
-                            else if (typeProp.PropertyType.IsEnum)
-                                typeProp.SetValue(newCtrl, Enum.Parse(typeProp.PropertyType, prop.Value.ToString().Split('.').Last()), null);
-                        }
                     }
                 }
+
+                // Log info about controls being added
+                string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"";
+                if (row != -1 || column != -1)
+                    log += $" (column {column}, row {row})";
+                Output.VerboseLog(log, ConsoleColor.Yellow);
+
+                // Add to parent object depending on type
+                if (type == typeof(ToolStripMenuItem))
+                    parent.Items.Add(newCtrl);
+                else if (row != -1 || column != -1)
+                    parent.Controls.Add(newCtrl, column, row);
+                else
+                    parent.Controls.Add(newCtrl);
             }
-
-            // Log info about controls being added
-            string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"" +
-                $"\n                        to Control \"{parentName}\"";
-            if (row != -1 || column != -1)
-                log += $" (column {column}, row {row})";
-            Output.VerboseLog(log, ConsoleColor.Yellow);
-
-            // Add to parent object depending on type
-            if (type == typeof(ToolStripMenuItem))
-                parent.Items.Add(newCtrl);
-            else if (row != -1 || column != -1)
-                parent.Controls.Add(newCtrl, column, row);
-            else
-                parent.Controls.Add(newCtrl);
         }
 
-        private void CreateTlpColumns(dynamic ctrl, JProperty prop)
+        private void SetSize(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            var value = (JArray)jsonProperty.Value;
+            int[] array = value.ToObject<int[]>();
+            typeProperty.SetValue(newCtrl, new Size(array[0], array[1]));
+        }
+
+        private void SetPadding(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            var value = (JArray)jsonProperty.Value;
+            int[] array = value.ToObject<int[]>();
+            typeProperty.SetValue(newCtrl, new Padding(array[0], array[1], array[2], array[3]));
+        }
+
+        private void SetCtrlProperty(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            if (typeProperty.PropertyType == typeof(string))
+                typeProperty.SetValue(newCtrl, jsonProperty.Value.ToString());
+            else if (typeProperty.PropertyType == typeof(int))
+                typeProperty.SetValue(newCtrl, Convert.ToInt32(jsonProperty.Value.ToString()));
+            else if (typeProperty.PropertyType == typeof(float))
+                typeProperty.SetValue(newCtrl, Convert.ToSingle(jsonProperty.Value.ToString()));
+            else if (typeProperty.PropertyType == typeof(bool))
+                typeProperty.SetValue(newCtrl, Convert.ToBoolean(jsonProperty.Value.ToString()));
+            else if (typeProperty.PropertyType.IsEnum)
+                typeProperty.SetValue(newCtrl, Enum.Parse(typeProperty.PropertyType, jsonProperty.Value.ToString().Split('.').Last()), null);
+        }
+
+        private void CreateColumns(dynamic ctrl, JProperty prop)
         {
             foreach (var value in (JArray)prop.Value)
             {
                 ctrl.ColumnCount += 1;
-                ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<float>()));
+                ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, value.Value<int>()));
             }
         }
 
-        private void CreateTlpRows(dynamic ctrl, JProperty prop)
+        private void CreateRows(dynamic ctrl, JProperty prop)
         {
             foreach (var value in (JArray)prop.Value)
             {
                 ctrl.RowCount += 1;
-                ctrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<float>()));
+                ctrl.RowStyles.Add(new RowStyle(SizeType.Percent, value.Value<int>()));
             }
         }
 
