@@ -11,13 +11,15 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.Remoting;
 using System.Drawing;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
 
 namespace ShrineFox.IO
 {
     public partial class SFForm : MetroSet_UI.Forms.MetroSetForm
     {
         Config config;
-
+        
         public SFForm(string formName = "", string formJson = "FormSettings\\MainForm.json", string userJson = "Saved\\MainUserData.json")
         {
             if (formName != "")
@@ -154,6 +156,9 @@ namespace ShrineFox.IO
                             case "Columns":
                                 CreateColumns(newCtrl, jsonProperty);
                                 break;
+                            case "Events":
+                                CreateEventHandlers(newCtrl, jsonProperty);
+                                break;
                             default:
                                 break;
                         }
@@ -174,6 +179,24 @@ namespace ShrineFox.IO
                 else
                     parent.Controls.Add(newCtrl);
             }
+        }
+
+        private void CreateEventHandlers(dynamic newCtrl, JProperty jsonProperty)
+        {
+            foreach (var token in jsonProperty.Value)
+            {
+                JProperty jprop = token.ToObject<JProperty>();
+                Exe.BindEventToDynamicCtrl(newCtrl, jprop.Name, this, "ExecuteScript");
+            }
+        }
+
+        private void ExecuteScript(object sender, EventArgs e)
+        {
+            string scriptName = "RunScript.txt";
+            string scriptPath = Path.Combine(Exe.Directory(), $"FormSettings\\Scripts\\{scriptName}");
+            var scriptOptions = ScriptOptions.Default.AddReferences(typeof(MessageBox).Assembly).AddImports("System.Windows.Forms");
+
+            CSharpScript.EvaluateAsync(File.ReadAllText(scriptPath), scriptOptions);
         }
 
         private void SetSize(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)

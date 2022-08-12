@@ -72,6 +72,27 @@ namespace ShrineFox.IO
             return Activator.CreateInstance(type);
         }
 
+        public static dynamic GetClassInstance(Type type)
+        {
+            // first, create a handle instead of the actual object
+            ObjectHandle classInstanceHandle = Activator.CreateInstance(type.Assembly.FullName, type.FullName);
+            // unwrap the real slim-shady
+            object classInstance = classInstanceHandle.Unwrap();
+            // re-map the type to that of the object we retrieved
+            type = classInstance.GetType();
+
+            return Activator.CreateInstance(type);
+        }
+
+        public static void BindEventToDynamicCtrl(dynamic ctrl, string eventName, object targetForm, string methodName)
+        {
+            Type type = ctrl.GetType();
+            EventInfo ei = type.GetEvent(eventName);
+            MethodInfo mi = ei.GetAddMethod();
+            Delegate d = Delegate.CreateDelegate(typeof(EventHandler), targetForm, methodName);
+            mi.Invoke(ctrl, new object[] { d });
+        }
+
         /// <summary>
         /// List of processes that were started by the program, and their handles.
         /// </summary>
