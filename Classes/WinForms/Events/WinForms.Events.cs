@@ -6,27 +6,23 @@ namespace ShrineFox.IO
 {
     public class WinFormsEvents
     {
-        public static void FolderPath_Click(object sender, EventArgs e)
+        public static string FolderPath_Click(string title = "Choose Folder...")
         {
-            TextBox txtBox = (TextBox)sender;
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
             dialog.IsFolderPicker = true;
-            dialog.Title = "Choose File...";
+            dialog.Title = title;
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-            {
-                txtBox.Text = dialog.FileName;
-            }
+                return dialog.FileName;
+            return "";
         }
 
-        public static void FilePath_Click(object sender, EventArgs e)
+        public static string FilePath_Click(string title = "Choose File...")
         {
-            TextBox txtBox = (TextBox)sender;
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.Title = "Choose File...";
+            dialog.Title = title;
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-            {
-                txtBox.Text = dialog.FileName;
-            }
+                return dialog.FileName;
+            return "";
         }
     }
 }
