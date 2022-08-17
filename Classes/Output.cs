@@ -35,7 +35,7 @@ namespace ShrineFox.IO
         /// The form control to output text to.
         /// Must be set in order for log text to appear in form.
         /// </summary>
-        public static RichTextBox LogControl { get; set; } = new RichTextBox();
+        public static SFRichTextBox LogControl { get; set; } = new SFRichTextBox();
 
         /// <summary>
         /// Logs text with a timestamp to the directory specified by LogPath.
@@ -58,14 +58,19 @@ namespace ShrineFox.IO
             // Append text to form control if specified
             if (LogControl != new RichTextBox())
             {
+                int length = LogControl.Text.Length;
                 // Set color of appended text
-                LogControl.SuspendLayout();
-                LogControl.SelectionStart = LogControl.TextLength;
-                LogControl.SelectionLength = 0;
-                LogControl.SelectionColor = FromColor(color);
-                LogControl.AppendText(logText);
-                LogControl.ScrollToCaret();
-                LogControl.ResumeLayout();
+                LogControl.BeginInvoke(new Action(() =>
+                {
+                    LogControl.SuspendLayout();
+                    LogControl.SelectionStart = LogControl.TextLength;
+                    LogControl.SelectionLength = 0;
+                    LogControl.SelectionColor = FromColor(color);
+                    LogControl.AppendText(logText);
+                    LogControl.ScrollToCaret();
+                    LogControl.ResumeLayout();
+                    LogControl.Refresh();
+                }));
             }
 
             if (color != new ConsoleColor())

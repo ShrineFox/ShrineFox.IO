@@ -132,15 +132,16 @@ namespace ShrineFox.IO
                 p.Exited += ProcessEnded;
                 p.Start();
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
-                // Start the asynchronous read
-                p.BeginOutputReadLine();
+
+                Output.Log(p.StandardOutput.ReadToEnd());
+
                 if (waitForExit)
-                {
                     p.WaitForExit();
-                    RemoveHandleFromProcList(p.Handle);
-                    p.Close();
-                    p.Dispose();
-                }
+                // Start the asynchronous read
+                //p.BeginOutputReadLine();
+                RemoveHandleFromProcList(p.Handle);
+                p.Close();
+                p.Dispose();
             }
         }
 
