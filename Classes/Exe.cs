@@ -117,7 +117,7 @@ namespace ShrineFox.IO
                 else
                     p.StartInfo.WorkingDirectory = Path.GetDirectoryName(exePath);
                 // Output working dir, exe path and arguments to console/log
-                Output.Log($"{workingDir}>{exePath} {args}");
+                Output.VerboseLog($"{workingDir}>{exePath} {args}");
                 // Set exe path and args, hide window and redirect output
                 p.StartInfo.FileName = exePath;
                 p.StartInfo.Arguments = args;
@@ -133,7 +133,7 @@ namespace ShrineFox.IO
                 p.Start();
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
 
-                Output.Log(p.StandardOutput.ReadToEnd());
+                Output.VerboseLog(p.StandardOutput.ReadToEnd());
 
                 if (waitForExit)
                     p.WaitForExit();

@@ -55,14 +55,17 @@ namespace ShrineFox.IO
                                 {
                                     try
                                     {
-                                        string pythonExePath = productKey.OpenSubKey("InstallPath").GetValue("ExecutablePath").ToString();
-                                        if (!String.IsNullOrEmpty(pythonExePath))
+                                        if (productKey.OpenSubKey("InstallPath").GetValueNames().Any(x => x.Equals("ExecutablePath")))
                                         {
-                                            if (requiredScripts == null || (requiredScripts != null && !requiredScripts.Any(x => !File.Exists(Path.Combine(Path.GetDirectoryName(pythonExePath), Path.Combine("Scripts", x))))))
+                                            string pythonExePath = productKey.OpenSubKey("InstallPath").GetValue("ExecutablePath").ToString();
+                                            if (!String.IsNullOrEmpty(pythonExePath))
+                                            {
+                                                if (requiredScripts == null || (requiredScripts != null && !requiredScripts.Any(x => !File.Exists(Path.Combine(Path.GetDirectoryName(pythonExePath), Path.Combine("Scripts", x))))))
+                                                    FoundLocations.Add(v.ToString(), pythonExePath);
+                                            }
+                                            else
                                                 FoundLocations.Add(v.ToString(), pythonExePath);
                                         }
-                                        else
-                                            FoundLocations.Add(v.ToString(), pythonExePath);
                                     }
                                     catch { }
                                 }

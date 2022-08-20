@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Data.cs" />
     <Compile Include="Classes\Endian\AlignmentHelper.cs" />
     <Compile Include="Classes\Endian\EndianBinaryReader.cs" />
     <Compile Include="Classes\Endian\EndianBinaryWriter.cs" />
