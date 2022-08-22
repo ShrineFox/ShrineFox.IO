@@ -60,7 +60,21 @@ namespace ShrineFox.IO
             {
                 int length = LogControl.Text.Length;
                 // Set color of appended text
-                LogControl.BeginInvoke(new Action(() =>
+                if (LogControl.InvokeRequired)
+                {
+                    LogControl.BeginInvoke(new Action(() =>
+                    {
+                        LogControl.SuspendLayout();
+                        LogControl.SelectionStart = LogControl.TextLength;
+                        LogControl.SelectionLength = 0;
+                        LogControl.SelectionColor = FromColor(color);
+                        LogControl.AppendText(logText);
+                        LogControl.ScrollToCaret();
+                        LogControl.ResumeLayout();
+                        LogControl.Refresh();
+                    }));
+                }
+                else
                 {
                     LogControl.SuspendLayout();
                     LogControl.SelectionStart = LogControl.TextLength;
@@ -70,7 +84,7 @@ namespace ShrineFox.IO
                     LogControl.ScrollToCaret();
                     LogControl.ResumeLayout();
                     LogControl.Refresh();
-                }));
+                }
             }
 
             if (color != new ConsoleColor())
