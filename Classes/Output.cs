@@ -1,10 +1,13 @@
-﻿using System;
+﻿using ShrineFox.IO.Properties;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -15,6 +18,31 @@ namespace ShrineFox.IO
 {
     public class Output
     {
+        /// <summary>
+        /// Whether to copy icon files to output directory.
+        /// </summary>
+        public static bool CopyIcons { get; set; } = true;
+
+        /// <summary>
+        /// Outputs icon files to build directory.
+        /// </summary>
+        public static void ExtractIcons()
+        {
+            if (CopyIcons)
+            {
+                ResourceManager MyResourceClass = new ResourceManager(typeof(Resources));
+                ResourceSet resourceSet = MyResourceClass.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                string iconDir = Path.Combine(Exe.Directory(), "Icons");
+                Directory.CreateDirectory(iconDir);
+                foreach (DictionaryEntry entry in resourceSet)
+                {
+                    string iconPath = Path.Combine(iconDir, entry.Key.ToString());
+                    if (!File.Exists(iconPath))
+                        File.WriteAllBytes(iconPath, (byte[])entry.Value);
+                } 
+            }
+        }
+
         /// <summary>
         /// The path of the file to output log text to.
         /// Must be set in order for text to be logged.
@@ -35,7 +63,7 @@ namespace ShrineFox.IO
         /// The form control to output text to.
         /// Must be set in order for log text to appear in form.
         /// </summary>
-        public static SFRichTextBox LogControl { get; set; } = new SFRichTextBox();
+        public static SFRichTextBox LogControl { get; set; } = null;
 
         /// <summary>
         /// Logs text with a timestamp to the directory specified by LogPath.
@@ -56,10 +84,8 @@ namespace ShrineFox.IO
                 color = DefaultColor;
 
             // Append text to form control if specified
-            if (LogControl != new RichTextBox())
+            if (LogControl != null)
             {
-                int length = LogControl.Text.Length;
-                // Set color of appended text
                 if (LogControl.InvokeRequired)
                 {
                     LogControl.BeginInvoke(new Action(() =>

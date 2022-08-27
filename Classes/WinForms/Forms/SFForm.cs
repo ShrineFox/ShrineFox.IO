@@ -11,8 +11,6 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.Remoting;
 using System.Drawing;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
 
 namespace ShrineFox.IO
 {
@@ -194,9 +192,8 @@ namespace ShrineFox.IO
         {
             string scriptName = "RunScript.txt";
             string scriptPath = Path.Combine(Exe.Directory(), $"FormSettings\\Scripts\\{scriptName}");
-            var scriptOptions = ScriptOptions.Default.AddReferences(typeof(MessageBox).Assembly).AddImports("System.Windows.Forms");
-
-            CSharpScript.EvaluateAsync(File.ReadAllText(scriptPath), scriptOptions);
+            //var scriptOptions = ScriptOptions.Default.AddReferences(typeof(MessageBox).Assembly).AddImports("System.Windows.Forms");
+            //CSharpScript.EvaluateAsync(File.ReadAllText(scriptPath), scriptOptions);
         }
 
         private void SetSize(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
