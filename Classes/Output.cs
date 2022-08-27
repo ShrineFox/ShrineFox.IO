@@ -30,16 +30,25 @@ namespace ShrineFox.IO
         {
             if (CopyIcons)
             {
-                ResourceManager MyResourceClass = new ResourceManager(typeof(Resources));
-                ResourceSet resourceSet = MyResourceClass.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                var assembly = Exe.GetAssemblyByName("ShrineFox.IO");
+                var files = assembly.GetManifestResourceNames();
                 string iconDir = Path.Combine(Exe.Directory(), "Icons");
                 Directory.CreateDirectory(iconDir);
-                foreach (DictionaryEntry entry in resourceSet)
+
+                foreach (string file in files)
                 {
-                    string iconPath = Path.Combine(iconDir, entry.Key.ToString());
-                    if (!File.Exists(iconPath))
-                        File.WriteAllBytes(iconPath, (byte[])entry.Value);
-                } 
+                    using (Stream stream = Exe.GetAssemblyByName("ShrineFox.IO").GetManifestResourceStream(file))
+                    {
+                        using (FileStream fileStream = new FileStream(Path.Combine(iconDir, file), FileMode.Create))
+                        {
+                            for (int i = 0; i < stream.Length; i++)
+                            {
+                                fileStream.WriteByte((byte)stream.ReadByte());
+                            }
+                            fileStream.Close();
+                        }
+                    }
+                }
             }
         }
 

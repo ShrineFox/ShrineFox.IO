@@ -43,6 +43,15 @@ namespace ShrineFox.IO
             return Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule.ModuleName);
         }
 
+        /// <summary>
+        /// Returns the assembly specified by name.
+        /// </summary>
+        /// <returns></returns>
+        public static Assembly GetAssemblyByName(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
+        }
+
         public static Type GetType(string name)
         {
             return AppDomain.CurrentDomain.GetAssemblies()
