@@ -19,40 +19,6 @@ namespace ShrineFox.IO
     public class Output
     {
         /// <summary>
-        /// Whether to copy icon files to output directory.
-        /// </summary>
-        public static bool CopyIcons { get; set; } = true;
-
-        /// <summary>
-        /// Outputs icon files to build directory.
-        /// </summary>
-        public static void ExtractIcons()
-        {
-            if (CopyIcons)
-            {
-                var assembly = Exe.GetAssemblyByName("ShrineFox.IO");
-                var files = assembly.GetManifestResourceNames();
-                string iconDir = Path.Combine(Exe.Directory(), "Icons");
-                Directory.CreateDirectory(iconDir);
-
-                foreach (string file in files)
-                {
-                    using (Stream stream = Exe.GetAssemblyByName("ShrineFox.IO").GetManifestResourceStream(file))
-                    {
-                        using (FileStream fileStream = new FileStream(Path.Combine(iconDir, file), FileMode.Create))
-                        {
-                            for (int i = 0; i < stream.Length; i++)
-                            {
-                                fileStream.WriteByte((byte)stream.ReadByte());
-                            }
-                            fileStream.Close();
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// The path of the file to output log text to.
         /// Must be set in order for text to be logged.
         /// </summary>

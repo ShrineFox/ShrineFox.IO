@@ -93,7 +93,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Classes\WinForms\Extensions\Dotnetrix.TabControl.dll" />
-    <Content Include="Icons\*.png" />
+    <Content Include="Icons\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MetroSet_UI">
