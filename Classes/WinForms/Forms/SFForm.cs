@@ -189,12 +189,18 @@ namespace ShrineFox.IO
             {
                 JProperty jprop = token.ToObject<JProperty>();
                 string assemblyName = Assembly.GetEntryAssembly().GetName().ToString();
-                string[] valueParts = jprop.Value.ToString().Split('.');
+                List<object> args = new List<object>();
+                var jarray = (JArray)jprop.Value;
+                foreach (var value in jarray.Last())
+                {
+                    args.Add(value.Value<string>());
+                }
+                string[] valueParts = jarray.First().Value<string>().Split('.');
                 string namespaceName = valueParts[0];
                 string className = valueParts[1];
                 string methodName = valueParts[2];
                 Action<Object, EventArgs> action = (o, ea) => 
-                            Exe.InvokeMethod(assemblyName, namespaceName, className, methodName);
+                            Exe.InvokeMethod(assemblyName, namespaceName, className, methodName, args.ToArray());
                 EventHandler eHandler = action.Invoke;
 
                 switch (jprop.Name)
