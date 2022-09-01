@@ -102,6 +102,14 @@ namespace ShrineFox.IO
             mi.Invoke(ctrl, new object[] { d });
         }
 
+        public static void InvokeMethod(string assemblyName, string namespaceName, string typeName, string methodName, object[] args = null)
+        {
+            Type calledType = Type.GetType(namespaceName + "." + typeName + "," + assemblyName);
+            calledType.InvokeMember(methodName, 
+                BindingFlags.InvokeMethod | BindingFlags.Public |BindingFlags.Static,
+                null, null, args);
+        }
+
         /// <summary>
         /// List of processes that were started by the program, and their handles.
         /// </summary>

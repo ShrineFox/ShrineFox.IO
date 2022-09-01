@@ -184,16 +184,27 @@ namespace ShrineFox.IO
             foreach (var token in jsonProperty.Value)
             {
                 JProperty jprop = token.ToObject<JProperty>();
-                Exe.BindEventToDynamicCtrl(newCtrl, jprop.Name, this, "ExecuteScript");
+                string assemblyName = Assembly.GetEntryAssembly().GetName().ToString();
+                string[] valueParts = jprop.Value.ToString().Split('.');
+                string namespaceName = valueParts[0];
+                string className = valueParts[1];
+                string methodName = valueParts[2];
+                Action<Object, EventArgs> action = (o, ea) => 
+                            Exe.InvokeMethod(assemblyName, namespaceName, className, methodName);
+                EventHandler eHandler = action.Invoke;
+
+                switch (jprop.Name)
+                {
+                    case "Click":
+                        newCtrl.Click += eHandler;
+                        break;
+                }
             }
         }
 
-        private void ExecuteScript(object sender, EventArgs e)
+        static object Execute(Delegate d, params object[] args)
         {
-            string scriptName = "RunScript.txt";
-            string scriptPath = Path.Combine(Exe.Directory(), $"FormSettings\\Scripts\\{scriptName}");
-            //var scriptOptions = ScriptOptions.Default.AddReferences(typeof(MessageBox).Assembly).AddImports("System.Windows.Forms");
-            //CSharpScript.EvaluateAsync(File.ReadAllText(scriptPath), scriptOptions);
+            return d.DynamicInvoke(args);
         }
 
         private void SetSize(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
