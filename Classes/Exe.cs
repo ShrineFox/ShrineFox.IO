@@ -93,15 +93,6 @@ namespace ShrineFox.IO
             return Activator.CreateInstance(type);
         }
 
-        public static void BindEventToDynamicCtrl(dynamic ctrl, string eventName, object targetForm, string methodName)
-        {
-            Type type = ctrl.GetType();
-            EventInfo ei = type.GetEvent(eventName);
-            MethodInfo mi = ei.GetAddMethod();
-            Delegate d = Delegate.CreateDelegate(typeof(EventHandler), targetForm, methodName);
-            mi.Invoke(ctrl, new object[] { d });
-        }
-
         public static void InvokeMethod(string assemblyName, string namespaceName, string typeName, string methodName, object[] args = null)
         {
             Type calledType = Type.GetType(namespaceName + "." + typeName + "," + assemblyName);

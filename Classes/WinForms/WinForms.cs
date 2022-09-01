@@ -10,7 +10,10 @@ namespace ShrineFox.IO
     {
         public static dynamic GetControl(Form form, string controlName)
         {
-            return form.Controls.Find(controlName, true).Single();
+            var ctrls = form.Controls.Find(controlName, true);
+            if (ctrls.Length < 1)
+                MessageBox.Show($"Form does not contain control named \"{controlName}\"", "Control Not Found");
+            return ctrls.Single();
         }
 
         public static dynamic GetControl(Control control, string controlName)

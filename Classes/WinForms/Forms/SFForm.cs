@@ -102,6 +102,10 @@ namespace ShrineFox.IO
 
                 // Get a list of the control's Type properties
                 PropertyInfo[] typeProperties = type.GetProperties();
+                // Set Name of Control
+                var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
+                nameProperty.SetValue(newCtrl, ctrlName);
+
                 // For each property of the control in JSON...
                 foreach (JProperty jsonProperty in ctrl.Properties())
                 {
