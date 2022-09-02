@@ -17,7 +17,9 @@ namespace ShrineFox.IO
     public partial class SFForm : MetroSet_UI.Forms.MetroSetForm
     {
         Config config;
-        
+        string mainFormJson = "";
+
+
         public SFForm(string formName = "", string formJson = "FormSettings\\MainForm.json", string userJson = "Saved\\MainUserData.json")
         {
             if (formName != "")
@@ -25,7 +27,8 @@ namespace ShrineFox.IO
             else
                 Name = Exe.Name();
             Text = Name;
-            config = new Config(userJson, formJson);
+            mainFormJson = formJson;
+            config = new Config(userJson, mainFormJson);
 
             SetupForm();
         }
@@ -84,103 +87,125 @@ namespace ShrineFox.IO
         {
             foreach (var subCtrl in ctrlToken["Controls"])
             {
-                var ctrl = subCtrl.Children().First().Value<JObject>();
-                // Get name of parent control
-                string parentName = GetJsonCtrlName(parent);
-                // Get type of parent control
-                Type parentType = parent.GetType();
-
-                // Get name of control being created
-                string ctrlName = GetJsonCtrlParent(ctrl).Name;
-                // Get type of control being created
-                Type type = GetJsonCtrlType(ctrl);
-                // Create new control instance from type
-                dynamic newCtrl = Exe.GetInstance(type);
-
-                int row = -1;
-                int column = -1;
-
-                // Get a list of the control's Type properties
-                PropertyInfo[] typeProperties = type.GetProperties();
-                // Set Name of Control
-                var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
-                nameProperty.SetValue(newCtrl, ctrlName);
-
-                // For each property of the control in JSON...
-                foreach (JProperty jsonProperty in ctrl.Properties())
+                if (subCtrl.ToString().Contains(".json"))
                 {
-                    // If there's a Type property with the same name...
-                    if (typeProperties.Any(x => x.Name.Equals(jsonProperty.Name)))
-                    {
-                        // Get the first JSON property that matches
-                        var typeProperty = typeProperties.First(x => x.Name.Equals(jsonProperty.Name));
+                    var jProp = subCtrl.Children().FirstOrDefault(x => x.Value<string>().Contains(".json"));
+                    string jsonPath = Path.Combine(Exe.Directory(), Path.Combine(Path.GetDirectoryName(mainFormJson), jProp.Value<string>()));
+                    
+                    var jObj = Json.Deserialize(jsonPath);
+                    var token = (JToken)jObj;
+                    Output.Log($"Loading Controls from: {jProp.Value<string>()}");
+                    AddControls(token, parent);
+                    Output.Log($"Loading Controls from: {mainFormJson}");
+                }
+                else
+                {
+                    AddControl(subCtrl, parent);
+                }
+            }
+        }
 
-                        // Assign property value to control
-                        switch (jsonProperty.Name)
-                        {
-                            case "Name":
-                                typeProperty.SetValue(newCtrl, ctrlName);
-                                break;
-                            case "Margin":
-                            case "Padding":
-                                SetPadding(typeProperty, jsonProperty, newCtrl);
-                                break;
-                            case "MaximumSize":
-                            case "MinimumSize":
-                                SetSize(typeProperty, jsonProperty, newCtrl);
-                                break;
-                            case "Controls":
-                                AddControls(ctrl, newCtrl);
-                                break;
-                            case "BackColor":
-                            case "ForeColor":
-                                typeProperty.SetValue(newCtrl, WinFormsExtensions.StringToColor(jsonProperty.Value.ToString()));
-                                break;
-                            default:
-                                SetCtrlProperty(typeProperty, jsonProperty, newCtrl);
-                                break;
-                        }
-                    }
-                    else
+        private void AddControl(JToken subCtrl, dynamic parent)
+        {
+            var ctrl = subCtrl.Children().First().Value<JObject>();
+            // Get name of parent control
+            string parentName = GetJsonCtrlName(parent);
+            // Get sub-json
+            string subJsonPath = ctrl.Value<string>("Json") ?? "";
+            if (subJsonPath != "")
+                AddControls(Path.Combine(Path.GetDirectoryName(mainFormJson), subJsonPath), parent);
+            // Get type of parent control
+            Type parentType = parent.GetType();
+            // Get name of control being created
+            string ctrlName = GetJsonCtrlParent(ctrl).Name;
+            // Get type of control being created
+            Type type = GetJsonCtrlType(ctrl);
+            // Create new control instance from type
+            dynamic newCtrl = Exe.GetInstance(type);
+
+            int row = -1;
+            int column = -1;
+
+            // Get a list of the control's Type properties
+            PropertyInfo[] typeProperties = type.GetProperties();
+            // Set Name of Control
+            var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
+            nameProperty.SetValue(newCtrl, ctrlName);
+
+            // For each property of the control in JSON...
+            foreach (JProperty jsonProperty in ctrl.Properties())
+            {
+                // If there's a Type property with the same name...
+                if (typeProperties.Any(x => x.Name.Equals(jsonProperty.Name)))
+                {
+                    // Get the first JSON property that matches
+                    var typeProperty = typeProperties.First(x => x.Name.Equals(jsonProperty.Name));
+
+                    // Assign property value to control
+                    switch (jsonProperty.Name)
                     {
-                        // Assign certain properties to the control even if names don't match
-                        switch (jsonProperty.Name)
-                        {
-                            case "Row":
-                                row = GetPropValueAsInt(jsonProperty);
-                                break;
-                            case "Column":
-                                column = GetPropValueAsInt(jsonProperty);
-                                break;
-                            case "Rows":
-                                CreateRows(newCtrl, jsonProperty);
-                                break;
-                            case "Columns":
-                                CreateColumns(newCtrl, jsonProperty);
-                                break;
-                            case "Events":
-                                CreateEventHandlers(newCtrl, jsonProperty);
-                                break;
-                            default:
-                                break;
-                        }
+                        case "Name":
+                            typeProperty.SetValue(newCtrl, ctrlName);
+                            break;
+                        case "Margin":
+                        case "Padding":
+                            SetPadding(typeProperty, jsonProperty, newCtrl);
+                            break;
+                        case "MaximumSize":
+                        case "MinimumSize":
+                            SetSize(typeProperty, jsonProperty, newCtrl);
+                            break;
+                        case "Controls":
+                            AddControls(ctrl, newCtrl);
+                            break;
+                        case "BackColor":
+                        case "ForeColor":
+                            typeProperty.SetValue(newCtrl, WinFormsExtensions.StringToColor(jsonProperty.Value.ToString()));
+                            break;
+                        default:
+                            SetCtrlProperty(typeProperty, jsonProperty, newCtrl);
+                            break;
                     }
                 }
-
-                // Log info about controls being added
-                string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"";
-                if (row != -1 || column != -1)
-                    log += $" (column {column}, row {row})";
-                Output.VerboseLog(log, ConsoleColor.Yellow);
-
-                // Add to parent object depending on type
-                if (type == typeof(ToolStripMenuItem))
-                    parent.Items.Add(newCtrl);
-                else if (row != -1 || column != -1)
-                    parent.Controls.Add(newCtrl, column, row);
                 else
-                    parent.Controls.Add(newCtrl);
+                {
+                    // Assign certain properties to the control even if names don't match
+                    switch (jsonProperty.Name)
+                    {
+                        case "Row":
+                            row = GetPropValueAsInt(jsonProperty);
+                            break;
+                        case "Column":
+                            column = GetPropValueAsInt(jsonProperty);
+                            break;
+                        case "Rows":
+                            CreateRows(newCtrl, jsonProperty);
+                            break;
+                        case "Columns":
+                            CreateColumns(newCtrl, jsonProperty);
+                            break;
+                        case "Events":
+                            CreateEventHandlers(newCtrl, jsonProperty);
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
+
+            // Log info about controls being added
+            string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"";
+            if (row != -1 || column != -1)
+                log += $" (column {column}, row {row})";
+            Output.VerboseLog(log, ConsoleColor.Yellow);
+
+            // Add to parent object depending on type
+            if (type == typeof(ToolStripMenuItem))
+                parent.Items.Add(newCtrl);
+            else if (row != -1 || column != -1)
+                parent.Controls.Add(newCtrl, column, row);
+            else
+                parent.Controls.Add(newCtrl);
         }
 
         private void CreateEventHandlers(dynamic newCtrl, JProperty jsonProperty)
@@ -210,11 +235,6 @@ namespace ShrineFox.IO
                         break;
                 }
             }
-        }
-
-        static object Execute(Delegate d, params object[] args)
-        {
-            return d.DynamicInvoke(args);
         }
 
         private void SetSize(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
