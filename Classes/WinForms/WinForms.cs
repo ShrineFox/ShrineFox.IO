@@ -1,5 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -19,6 +20,30 @@ namespace ShrineFox.IO
         public static dynamic GetControl(Control control, string controlName)
         {
             return GetControl(control.FindForm(), controlName);
+        }
+
+        public static List<Control> EnumerateControls(Form form)
+        {
+            List<Control> controls = new List<Control>();
+            foreach (Control control in form.Controls)
+            {
+                controls.Add(control);
+                if (control.Controls != null)
+                    controls.AddRange(EnumerateChildren(control));
+            }
+            return controls;
+        }
+
+        public static List<Control> EnumerateChildren(Control root)
+        {
+            List<Control> controls = new List<Control>();
+            foreach (Control control in root.Controls)
+            {
+                controls.Add(control);
+                if (control.Controls != null)
+                    controls.AddRange(EnumerateChildren(control));
+            }
+            return controls;
         }
 
         public static void SetControlValue(Control control, string controlText)

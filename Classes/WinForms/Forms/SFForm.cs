@@ -19,7 +19,6 @@ namespace ShrineFox.IO
         Config config;
         string mainFormJson = "";
 
-
         public SFForm(string formName = "", string formJson = "FormSettings\\MainForm.json", string userJson = "Saved\\MainUserData.json")
         {
             if (formName != "")
@@ -51,6 +50,61 @@ namespace ShrineFox.IO
             }
 
             Output.Log("Form Loaded.");
+
+            LoadSavedData();
+        }
+
+        public void LoadSavedData()
+        {
+            if (config.UserData != null)
+            {
+                foreach (JToken subCtrl in config.UserData["Controls"])
+                {
+                    string ctrlName = GetJsonCtrlName(subCtrl);
+                    var ctrl = subCtrl.Children().First().Value<JObject>();
+                    Type type = GetJsonCtrlType(ctrl);
+                    // For each property of the control in JSON...
+                    foreach (JProperty jsonProperty in ctrl.Properties())
+                    {
+                        // If there's a Type property with the same name...
+                        var typeProperties = type.GetProperties();
+                        if (typeProperties.Any(x => x.Name.Equals(jsonProperty.Name)))
+                        {
+                            // Get the first JSON property that matches
+                            var typeProperty = typeProperties.First(x => x.Name.Equals(jsonProperty.Name));
+                            // Assign property value to control
+                            dynamic formCtrl = WinForms.GetControl(this, ctrlName);
+                            SetCtrlProperty(typeProperty, jsonProperty, formCtrl);
+                            Output.VerboseLog($"Set \"{ctrlName}\" {jsonProperty.Name} to \"{jsonProperty.Value}\" " +
+                                $"from {Path.GetFileName(config.UserDataPath)}", ConsoleColor.Yellow);
+                        }
+                    }
+                }
+                Output.Log("User Data Loaded.");
+            }
+        }
+
+        public void SaveData()
+        {
+            if (!string.IsNullOrEmpty(config.UserDataPath))
+            {
+                string json = "{\n\t\"Controls\": {\n";
+                foreach (var ctrl in WinForms.EnumerateControls(this))
+                {
+                    if (ctrl.Text != null)
+                    {
+                        json = json + $"\t\t\"{ctrl.Name}\": {{" +
+                            $"\n\t\t\t\"ControlType\": \"{ctrl.GetType().FullName}\"," +
+                            $"\n\t\t\t\"Text\": \"{ctrl.Text}\"" +
+                            "\n\t\t},\n";
+                        Output.VerboseLog($"Saved \"{ctrl.Name}\" Text as \"{ctrl.Text}\" " +
+                                $"to {Path.GetFileName(config.UserDataPath)}", ConsoleColor.Yellow);
+                    }
+                }
+                json = json + "\t}\n}";
+                File.WriteAllText(config.UserDataPath, json);
+                Output.Log("User Data Saved.");
+            }
         }
 
         private void SetupTheme()
