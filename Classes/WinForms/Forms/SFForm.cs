@@ -154,7 +154,7 @@ namespace ShrineFox.IO
         {
             foreach (JProperty property in ctrlToken.Children<JProperty>())
             {
-                if (property.Name.Equals("Controls"))
+                if (property.Name.Equals("Controls") || property.Name.Equals("DropDownItems"))
                 {
                     AddSubControls(property, parent);
                 }
@@ -212,7 +212,6 @@ namespace ShrineFox.IO
             // Set Name of Control
             var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
             nameProperty.SetValue(newCtrl, ctrlName);
-
             
             // For each property of the control in JSON...
             foreach (JProperty jsonProperty in ctrl.Properties())
@@ -238,6 +237,7 @@ namespace ShrineFox.IO
                             SetSize(typeProperty, jsonProperty, newCtrl);
                             break;
                         case "Controls":
+                        case "DropDownItems":
                             AddControls(ctrl, newCtrl);
                             break;
                         case "BackColor":
@@ -283,7 +283,9 @@ namespace ShrineFox.IO
             Output.VerboseLog(log, ConsoleColor.Yellow);
 
             // Add to parent object depending on type
-            if (type == typeof(ToolStripMenuItem))
+            if (parentType == typeof(ToolStripMenuItem))
+                parent.DropDownItems.Add(newCtrl);
+            else if (type == typeof(ToolStripMenuItem))
                 parent.Items.Add(newCtrl);
             else if (row != -1 || column != -1)
                 parent.Controls.Add(newCtrl, column, row);
