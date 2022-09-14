@@ -228,6 +228,9 @@ namespace ShrineFox.IO
                         case "Name":
                             typeProperty.SetValue(newCtrl, ctrlName);
                             break;
+                        case "Font":
+                            SetFont(typeProperty, jsonProperty, newCtrl);
+                            break;
                         case "Margin":
                         case "Padding":
                             SetPadding(typeProperty, jsonProperty, newCtrl);
@@ -291,6 +294,13 @@ namespace ShrineFox.IO
                 parent.Controls.Add(newCtrl, column, row);
             else
                 parent.Controls.Add(newCtrl);
+        }
+
+        private void SetFont(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            var value = (JArray)jsonProperty.Value;
+            string[] array = value.ToObject<string[]>();
+            typeProperty.SetValue(newCtrl, new System.Drawing.Font(array[0], Convert.ToSingle(array[1].ToLower().Replace("f",""))));
         }
 
         private void CreateEventHandlers(dynamic newCtrl, JProperty jsonProperty)
