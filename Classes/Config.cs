@@ -35,15 +35,21 @@ namespace ShrineFox.IO
         {
             FormSettingsPath = Path.GetFullPath(FormSettingsPath);
             if (File.Exists(FormSettingsPath))
+            {
                 FormSettings = Json.Deserialize(FormSettingsPath);
+                Output.Log($"Loaded form settings from \"{FormSettingsPath}\"", ConsoleColor.Green);
+            }
             else
                 Output.Log($"Failed to load \"{FormSettingsPath}\", file doesn't exist.");
 
             UserDataPath = Path.GetFullPath(UserDataPath);
             if (File.Exists(UserDataPath))
+            {
                 UserData = Json.Deserialize(UserDataPath);
+                Output.Log($"Loaded user data from \"{(UserDataPath)}\"", ConsoleColor.Green);
+            }
             else
-                Output.Log($"Failed to load \"{UserDataPath}\", file doesn't exist.");
+                Output.VerboseLog($"Failed to load \"{UserDataPath}\", file doesn't exist.");
         }
 
         // Overwrite userdata and formsettings with current values

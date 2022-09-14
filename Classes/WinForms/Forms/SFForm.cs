@@ -19,7 +19,9 @@ namespace ShrineFox.IO
         Config config;
         string mainFormJson = "";
 
-        public SFForm(string formName = "", string formJson = "FormSettings\\MainForm.json", string userJson = "Saved\\MainUserData.json")
+        public SFForm(string formName = "", 
+            string formJson = "Form\\MainForm.json",
+            string userJson = "Form\\MainUserData.json")
         {
             if (formName != "")
                 Name = formName;
@@ -35,10 +37,10 @@ namespace ShrineFox.IO
         private void SetupForm()
         {
             // Set up default form appearance
+            SetupLog();
             SetupTheme();
             WinForms.SetDefaultIcon();
             SetTreeviewImages();
-            SetupLogging();
 
             // Load user generated layout
             config.Load();
@@ -107,6 +109,17 @@ namespace ShrineFox.IO
             }
         }
 
+        private static void SetupLog()
+        {
+            Output.Logging = true;
+            Output.LogToFile = true;
+            #if DEBUG
+                if (!Output.HasMainWindow())
+                    Output.AllocConsole();
+                Output.VerboseLogging = true;
+            #endif
+        }
+
         private void SetupTheme()
         {
             // Make MetroSetUI look presentable
@@ -139,22 +152,40 @@ namespace ShrineFox.IO
 
         private void AddControls(JToken ctrlToken, dynamic parent)
         {
-            foreach (var subCtrl in ctrlToken["Controls"])
+            foreach (JProperty property in ctrlToken.Children<JProperty>())
             {
-                if (subCtrl.ToString().Contains(".json"))
+                if (property.Name.Equals("Controls"))
                 {
-                    var jProp = subCtrl.Children().FirstOrDefault(x => x.Value<string>().Contains(".json"));
-                    string jsonPath = Path.Combine(Exe.Directory(), Path.Combine(Path.GetDirectoryName(mainFormJson), jProp.Value<string>()));
-                    
-                    var jObj = Json.Deserialize(jsonPath);
-                    var token = (JToken)jObj;
-                    Output.Log($"Loading Controls from: {jProp.Value<string>()}");
-                    AddControls(token, parent);
-                    Output.Log($"Loading Controls from: {mainFormJson}");
+                    AddSubControls(property, parent);
                 }
-                else
+            }
+        }
+
+        private void AddSubControls(JProperty controls, dynamic parent)
+        {
+            foreach (var propertyList in controls.Children())
+            {
+                foreach (JProperty property in propertyList)
                 {
-                    AddControl(subCtrl, parent);
+                    if (property.Value.ToString().Contains("ControlType"))
+                    {
+                        AddControl(property, parent);
+                    }
+                    else if (property.Name.ToLower().StartsWith("json_"))
+                    {
+                        // Parse referenced json files and add controls to parent
+                        string value = property.Children().First().Value<string>();
+                        if (value.ToLower().EndsWith(".json"))
+                        {
+                            string jsonPath = Path.Combine(Exe.Directory(),
+                                Path.Combine(Path.GetDirectoryName(mainFormJson),
+                                value));
+                            var jObj = Json.Deserialize(jsonPath);
+                            var subCtrl = (JToken)jObj;
+                            Output.Log($"Loading Controls from \"{value}\"");
+                            AddControls(subCtrl, parent);
+                        }
+                    }
                 }
             }
         }
@@ -164,10 +195,6 @@ namespace ShrineFox.IO
             var ctrl = subCtrl.Children().First().Value<JObject>();
             // Get name of parent control
             string parentName = GetJsonCtrlName(parent);
-            // Get sub-json
-            string subJsonPath = ctrl.Value<string>("Json") ?? "";
-            if (subJsonPath != "")
-                AddControls(Path.Combine(Path.GetDirectoryName(mainFormJson), subJsonPath), parent);
             // Get type of parent control
             Type parentType = parent.GetType();
             // Get name of control being created
@@ -186,6 +213,7 @@ namespace ShrineFox.IO
             var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
             nameProperty.SetValue(newCtrl, ctrlName);
 
+            
             // For each property of the control in JSON...
             foreach (JProperty jsonProperty in ctrl.Properties())
             {
@@ -248,7 +276,8 @@ namespace ShrineFox.IO
             }
 
             // Log info about controls being added
-            string log = $"Adding {type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"";
+            string log = $"{type.Name.Replace("System.Windows.Forms.", "")} \"{ctrlName}\"" +
+                $"\n\tadded to {parentType.FullName.Replace("System.Windows.Forms.", "")} \"{parent.Name}\"";
             if (row != -1 || column != -1)
                 log += $" (column {column}, row {row})";
             Output.VerboseLog(log, ConsoleColor.Yellow);
@@ -378,22 +407,6 @@ namespace ShrineFox.IO
 
             TreeViewBuilder.SetIcon(Path.Combine(iconPath, "page_white.png"), ".file");
             TreeViewBuilder.SetIcon(Path.Combine(iconPath, "folder.png"), ".folder");
-        }
-
-        private void SetupLogging()
-        {
-            if (!Output.HasMainWindow())
-                Output.AllocConsole();
-
-            Output.LogPath = "log.txt";
-            //Output.LogControl = WinForms.GetControl(this, "richTextBox_OutputLog");
-            #if DEBUG
-                Output.VerboseLogging = true;
-            #endif
-
-            Output.VerboseLog("Program started.", ConsoleColor.Gray);
-            Output.Log("Create a new project or load an existing one to get started.", ConsoleColor.Green);
-            Output.Log("Log test.");
         }
     }
 }
