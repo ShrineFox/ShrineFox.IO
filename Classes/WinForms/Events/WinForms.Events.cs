@@ -1,5 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace ShrineFox.IO
@@ -16,13 +17,21 @@ namespace ShrineFox.IO
             return "";
         }
 
-        public static string FilePath_Click(string title = "Choose File...")
+        public static List<string> FilePath_Click(string title = "Choose File...", bool multiSelect = false, 
+            string[] filters = null)
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
             dialog.Title = title;
+            dialog.Multiselect = multiSelect;
+            if (filters != null)
+                foreach (var filter in filters)
+                {
+                    string[] filterParts = filter.Split('(');
+                    dialog.Filters.Add(new CommonFileDialogFilter(filterParts[0].TrimEnd(), filterParts[1].TrimEnd(')')));
+                }
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-                return dialog.FileName;
-            return "";
+                return (List<string>)dialog.FileNames;
+            return new List<string>();
         }
     }
 }

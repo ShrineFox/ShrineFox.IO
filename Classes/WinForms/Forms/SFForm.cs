@@ -212,6 +212,9 @@ namespace ShrineFox.IO
             // Set Name of Control
             var nameProperty = typeProperties.First(x => x.Name.Equals("Name"));
             nameProperty.SetValue(newCtrl, ctrlName);
+
+            // Inherit properties from parent by default
+            SetDefaultProps(newCtrl, parent);
             
             // For each property of the control in JSON...
             foreach (JProperty jsonProperty in ctrl.Properties())
@@ -294,6 +297,22 @@ namespace ShrineFox.IO
                 parent.Controls.Add(newCtrl, column, row);
             else
                 parent.Controls.Add(newCtrl);
+        }
+
+        private void SetDefaultProps(dynamic newCtrl, dynamic parent)
+        {
+            // Get type of dynamic control
+            Type ctrlType = newCtrl.GetType();
+            // Get type of parent control
+            Type parentType = parent.GetType();
+
+            // Set default colors from parent
+            if (ctrlType.GetProperties().Any(x => x.Name == "ForeColor") &&
+                parentType.GetProperties().Any(x => x.Name == "ForeColor"))
+                newCtrl.ForeColor = parent.ForeColor;
+            if (ctrlType.GetProperties().Any(x => x.Name == "BackColor") &&
+                parentType.GetProperties().Any(x => x.Name == "BackColor"))
+                newCtrl.BackColor = parent.BackColor;
         }
 
         private void SetFont(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
