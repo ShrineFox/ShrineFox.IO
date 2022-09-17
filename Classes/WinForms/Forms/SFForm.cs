@@ -250,6 +250,9 @@ namespace ShrineFox.IO
                         case "ForeColor":
                             typeProperty.SetValue(newCtrl, WinFormsExtensions.StringToColor(jsonProperty.Value.ToString()));
                             break;
+                        case "Items":
+                            AddItems(typeProperty, jsonProperty, newCtrl);
+                            break;
                         default:
                             SetCtrlProperty(typeProperty, jsonProperty, newCtrl);
                             break;
@@ -299,6 +302,14 @@ namespace ShrineFox.IO
                 parent.Controls.Add(newCtrl);
         }
 
+        private void AddItems(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            var value = (JArray)jsonProperty.Value;
+            string[] array = value.ToObject<string[]>();
+            foreach (var item in array)
+                newCtrl.Items.Add(item);
+        }
+
         private void SetDefaultProps(dynamic newCtrl, dynamic parent)
         {
             // Get type of dynamic control
@@ -306,13 +317,16 @@ namespace ShrineFox.IO
             // Get type of parent control
             Type parentType = parent.GetType();
 
-            // Set default colors from parent
+            // Set default font/colors from parent
             if (ctrlType.GetProperties().Any(x => x.Name == "ForeColor") &&
                 parentType.GetProperties().Any(x => x.Name == "ForeColor"))
                 newCtrl.ForeColor = parent.ForeColor;
             if (ctrlType.GetProperties().Any(x => x.Name == "BackColor") &&
                 parentType.GetProperties().Any(x => x.Name == "BackColor"))
                 newCtrl.BackColor = parent.BackColor;
+            if (ctrlType.GetProperties().Any(x => x.Name == "Font") &&
+                parentType.GetProperties().Any(x => x.Name == "Font"))
+                newCtrl.Font = parent.Font;
         }
 
         private void SetFont(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
