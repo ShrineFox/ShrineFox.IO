@@ -278,7 +278,12 @@ namespace ShrineFox.IO
                         case "Events":
                             CreateEventHandlers(newCtrl, jsonProperty);
                             break;
+                        case "ControlType":
+                            // Don't print error about this not existing
+                            break;
                         default:
+                            Output.Log($"Failed to set property \"{jsonProperty.Name}\" of {newCtrl.GetType().Name} \"{newCtrl.Name}\" " +
+                                $"to value: \"{jsonProperty.Value}\". Property name is unrecognized.", ConsoleColor.Red);
                             break;
                     }
                 }
@@ -308,6 +313,7 @@ namespace ShrineFox.IO
             string[] array = value.ToObject<string[]>();
             foreach (var item in array)
                 newCtrl.Items.Add(item);
+            LogPropertySet(typeProperty, jsonProperty, newCtrl);
         }
 
         private void SetDefaultProps(dynamic newCtrl, dynamic parent)
@@ -334,6 +340,7 @@ namespace ShrineFox.IO
             var value = (JArray)jsonProperty.Value;
             string[] array = value.ToObject<string[]>();
             typeProperty.SetValue(newCtrl, new System.Drawing.Font(array[0], Convert.ToSingle(array[1].ToLower().Replace("f",""))));
+            LogPropertySet(typeProperty, jsonProperty, newCtrl);
         }
 
         private void CreateEventHandlers(dynamic newCtrl, JProperty jsonProperty)
@@ -360,6 +367,7 @@ namespace ShrineFox.IO
                 {
                     case "Click":
                         newCtrl.Click += eHandler;
+                        LogEventSet(jprop, newCtrl);
                         break;
                 }
             }
@@ -370,6 +378,7 @@ namespace ShrineFox.IO
             var value = (JArray)jsonProperty.Value;
             int[] array = value.ToObject<int[]>();
             typeProperty.SetValue(newCtrl, new Size(array[0], array[1]));
+            LogPropertySet(typeProperty, jsonProperty, newCtrl);
         }
 
         private void SetPadding(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
@@ -377,20 +386,41 @@ namespace ShrineFox.IO
             var value = (JArray)jsonProperty.Value;
             int[] array = value.ToObject<int[]>();
             typeProperty.SetValue(newCtrl, new Padding(array[0], array[1], array[2], array[3]));
+            LogPropertySet(typeProperty, jsonProperty, newCtrl);
         }
 
         private void SetCtrlProperty(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
         {
             if (typeProperty.PropertyType == typeof(string))
+            {
                 typeProperty.SetValue(newCtrl, jsonProperty.Value.ToString());
+                LogPropertySet(typeProperty, jsonProperty, newCtrl);
+            }
             else if (typeProperty.PropertyType == typeof(int))
+            {
                 typeProperty.SetValue(newCtrl, Convert.ToInt32(jsonProperty.Value.ToString()));
+                LogPropertySet(typeProperty, jsonProperty, newCtrl);
+            }
             else if (typeProperty.PropertyType == typeof(float))
+            {
                 typeProperty.SetValue(newCtrl, Convert.ToSingle(jsonProperty.Value.ToString()));
+                LogPropertySet(typeProperty, jsonProperty, newCtrl);
+            }
             else if (typeProperty.PropertyType == typeof(bool))
+            {
                 typeProperty.SetValue(newCtrl, Convert.ToBoolean(jsonProperty.Value.ToString()));
+                LogPropertySet(typeProperty, jsonProperty, newCtrl);
+            }
             else if (typeProperty.PropertyType.IsEnum)
+            {
                 typeProperty.SetValue(newCtrl, Enum.Parse(typeProperty.PropertyType, jsonProperty.Value.ToString().Split('.').Last()), null);
+                LogPropertySet(typeProperty, jsonProperty, newCtrl);
+            }
+            else
+            {
+                Output.Log($"Failed to set property \"{typeProperty.Name}\" of {newCtrl.GetType().Name} \"{newCtrl.Name}\" " +
+                    $"to value: \"{jsonProperty.Value}\". Value type is unrecognized.", ConsoleColor.Red);
+            }
         }
 
         private void CreateColumns(dynamic ctrl, JProperty prop)
@@ -452,6 +482,18 @@ namespace ShrineFox.IO
 
             TreeViewBuilder.SetIcon(Path.Combine(iconPath, "page_white.png"), ".file");
             TreeViewBuilder.SetIcon(Path.Combine(iconPath, "folder.png"), ".folder");
+        }
+
+        private void LogPropertySet(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            Output.VerboseLog($"set property \"{typeProperty.Name}\" of {newCtrl.GetType().Name} \"{newCtrl.Name}\" " +
+                $"to {typeProperty.PropertyType.Name}: \"{jsonProperty.Value}\"", ConsoleColor.Cyan);
+        }
+
+        private void LogEventSet(JProperty jsonProperty, dynamic newCtrl)
+        {
+            Output.VerboseLog($"Added \"{jsonProperty.Name}\" EventHandler \"{jsonProperty.Value}\" to {newCtrl.GetType().Name} \"{newCtrl.Name}\"",
+                ConsoleColor.Blue);
         }
     }
 }
