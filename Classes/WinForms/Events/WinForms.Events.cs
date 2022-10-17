@@ -30,7 +30,7 @@ namespace ShrineFox.IO
                     dialog.Filters.Add(new CommonFileDialogFilter(filterParts[0].TrimEnd(), filterParts[1].TrimEnd(')')));
                 }
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-                return (List<string>)dialog.FileNames;
+                return new List<string>(dialog.FileNames);
             return new List<string>();
         }
     }

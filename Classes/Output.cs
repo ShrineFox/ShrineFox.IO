@@ -47,24 +47,28 @@ namespace ShrineFox.IO
         /// The form control to output text to.
         /// Must be set in order for log text to appear in form.
         /// </summary>
-        public static SFRichTextBox LogControl { get; set; } = null;
+        public static RichTextBox LogControl { get; set; } = null;
 
         /// <summary>
         /// Logs text with a timestamp to the directory specified by LogPath.
         /// </summary>
         /// <param name="text">The text to log.</param>
         /// <param name="color">The color of the text in the console/form. Will use DefaultColor if not specified.</param>
-        public static void Log(string text, ConsoleColor color = new ConsoleColor())
+        public static void Log(string text, ConsoleColor color = new ConsoleColor(), string path = null)
         {
+            Console.OutputEncoding = Encoding.Unicode;
             if (!Logging)
                 return;
+
+            if (path == null)
+                path = LogPath;
 
             // Add timestamp before text
             string logText = $"\n[{DateTime.Now.ToString("MM/dd/yyyy HH:mm tt")}] {text}";
 
             // Output to txt file
             if (LogToFile)
-                File.AppendAllText(LogPath, logText);
+                File.AppendAllText(path, logText);
 
             // Set the color to the default color unless one is specified
             if (color == new ConsoleColor())
