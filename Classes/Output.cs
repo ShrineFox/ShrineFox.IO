@@ -115,7 +115,7 @@ namespace ShrineFox.IO
         /// </summary>
         /// <param name="text">The text to log.</param>
         /// <param name="color">The color of the text in the console/form.</param>
-        public static void VerboseLog(string text, ConsoleColor color = new ConsoleColor())
+        public static void VerboseLog(string text, ConsoleColor color = ConsoleColor.Gray)
         {
             if (VerboseLogging)
                 Log(text, color);

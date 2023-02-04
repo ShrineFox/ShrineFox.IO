@@ -56,35 +56,33 @@ namespace ShrineFox.IO
         /// <param name="exePath"></param>
         /// <param name="args"></param>
         /// <param name="control"></param>
-        public static void Mount(string exePath, Control control, string args = "")
+        public static Process Mount(string exePath, Control control, string args = "")
         {
-            using (Process p = new Process())
-            {
-                p.StartInfo.FileName = exePath;
-                p.StartInfo.Arguments = args;
-                p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                p.Start();
-                Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
-                Thread.Sleep(1200);
-                p.WaitForInputIdle();
+            Process p = new Process();
+            p.StartInfo.FileName = exePath;
+            p.StartInfo.Arguments = args;
+            //p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.Start();
+            Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
+            Thread.Sleep(1200);
+            p.WaitForInputIdle();
 
-                SetParent(p.MainWindowHandle, control.Handle);
-                ShowWindow(p.MainWindowHandle, SW_MINIMIZE);
-                SetForegroundWindow(p.MainWindowHandle);
-                SetFocus(p.MainWindowHandle);
-                MoveWindow(p.MainWindowHandle, 0, 0, control.Width, control.Height, true);
-                IntPtr HMENU = GetMenu(p.MainWindowHandle);
-                int count = GetMenuItemCount(HMENU);
-                for (int i = 0; i < count; i++)
-                    RemoveMenu(HMENU, 0, (MF_BYPOSITION | MF_REMOVE));
-                DrawMenuBar(p.MainWindowHandle);
-                SetWindowLong(p.MainWindowHandle, GWL_STYLE, WS_VISIBLE);
-                ShowWindow(p.MainWindowHandle, SW_MAXIMIZE);
-                SetForegroundWindow(p.MainWindowHandle);
-                SetFocus(p.MainWindowHandle);
-            }
+            IntPtr handle = p.MainWindowHandle;
+            SetParent(handle, control.Handle);
+            ShowWindow(handle, SW_MINIMIZE);
+            SetForegroundWindow(handle);
+            SetFocus(handle);
+            MoveWindow(handle, 0, 0, control.Width, control.Height, true);
+            IntPtr HMENU = GetMenu(handle);
+            int count = GetMenuItemCount(HMENU);
+            for (int i = 0; i < count; i++)
+                RemoveMenu(HMENU, 0, (MF_BYPOSITION | MF_REMOVE));
+            DrawMenuBar(handle);
+            SetWindowLong(handle, GWL_STYLE, WS_VISIBLE);
+            ShowWindow(handle, SW_MAXIMIZE);
+            SetForegroundWindow(handle);
+            SetFocus(handle);
+            return p;
         }
-
-        
     }
 }

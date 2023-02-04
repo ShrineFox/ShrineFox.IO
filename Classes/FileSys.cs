@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,6 +111,11 @@ namespace ShrineFox.IO
             // equal to "file2byte" at this point only if the files are 
             // the same.
             return ((file1byte - file2byte) == 0);
+        }
+
+        public static string GetExtensionlessPath(string path)
+        {
+            return Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
         }
 
         /// <summary>

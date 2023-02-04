@@ -7,42 +7,43 @@ using System.Windows.Forms;
 
 namespace ShrineFox.IO
 {
-    public class WinFormsmDialogs
+    public class WinFormsDialogs
     {
         public static bool YesNoMsgBox(string title, string message, MessageBoxIcon icon = MessageBoxIcon.Warning)
         {
-            Output.Log($"{title}: {message}");
+            Output.VerboseLog($"[MessageBox] {title}: {message}");
             if (MessageBox.Show(message, title, MessageBoxButtons.YesNo, icon) == DialogResult.Yes)
             {
-                Output.Log($"{title}: {message}\n> Yes\n");
+                Output.VerboseLog("[Result] Yes\n");
                 return true;
             }
             else
             {
-                Output.Log($"{title}: {message}\n> No\n");
+                Output.VerboseLog("[Result] No\n");
                 return false;
             }
         }
 
         public static bool OKCancelBox(string title, string message, MessageBoxIcon icon = MessageBoxIcon.Warning)
         {
-            Output.Log($"{title}: {message}");
+            Output.VerboseLog($"[MessageBox] {title}: {message}");
             if (MessageBox.Show(message, title, MessageBoxButtons.OKCancel, icon) == DialogResult.Yes)
             {
-                Output.Log($"{title}: {message}\n> OK\n");
+                Output.VerboseLog("[Result] OK\n");
                 return true;
             }
             else
             {
-                Output.Log($"{title}: {message}\n> Cancel\n");
+                Output.VerboseLog("[Result] Cancel\n");
                 return false;
             }
         }
 
         public static void OKMsgBox(string title, string message, MessageBoxIcon icon = MessageBoxIcon.Information)
         {
-            MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
-            Output.Log($"{title}: {message}");
+            Output.VerboseLog($"[MessageBox] {title}: {message}");
+            if (MessageBox.Show(message, title, MessageBoxButtons.OK, icon) == DialogResult.OK)
+                Output.VerboseLog("[Result] OK\n");
         }
     }
 }

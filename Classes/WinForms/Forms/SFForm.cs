@@ -343,6 +343,14 @@ namespace ShrineFox.IO
             LogPropertySet(typeProperty, jsonProperty, newCtrl);
         }
 
+        private void SetDialogResult(PropertyInfo typeProperty, JProperty jsonProperty, dynamic newCtrl)
+        {
+            var value = (JArray)jsonProperty.Value;
+            string[] array = value.ToObject<string[]>();
+            typeProperty.SetValue(newCtrl, new System.Drawing.Font(array[0], Convert.ToSingle(array[1].ToLower().Replace("f", ""))));
+            LogPropertySet(typeProperty, jsonProperty, newCtrl);
+        }
+
         private void CreateEventHandlers(dynamic newCtrl, JProperty jsonProperty)
         {
             foreach (var token in jsonProperty.Value)
