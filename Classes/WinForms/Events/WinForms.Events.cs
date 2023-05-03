@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace ShrineFox.IO
 {
@@ -18,20 +19,39 @@ namespace ShrineFox.IO
         }
 
         public static List<string> FilePath_Click(string title = "Choose File...", bool multiSelect = false, 
-            string[] filters = null)
+            string[] filters = null, bool save = false)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.Title = title;
-            dialog.Multiselect = multiSelect;
-            if (filters != null)
-                foreach (var filter in filters)
-                {
-                    string[] filterParts = filter.Split('(');
-                    dialog.Filters.Add(new CommonFileDialogFilter(filterParts[0].TrimEnd(), filterParts[1].TrimEnd(')')));
-                }
-            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-                return new List<string>(dialog.FileNames);
-            return new List<string>();
+            if (save)
+            {
+                CommonSaveFileDialog dialog = new CommonSaveFileDialog();
+
+                dialog.Title = title;
+                if (filters != null)
+                    foreach (var filter in filters)
+                    {
+                        string[] filterParts = filter.Split('(');
+                        dialog.Filters.Add(new CommonFileDialogFilter(filterParts[0].TrimEnd(), filterParts[1].TrimEnd(')')));
+                    }
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                    return new List<string>() { dialog.FileName };
+            }
+            else
+            {
+                CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+
+                dialog.Title = title;
+                dialog.Multiselect = multiSelect;
+                if (filters != null)
+                    foreach (var filter in filters)
+                    {
+                        string[] filterParts = filter.Split('(');
+                        dialog.Filters.Add(new CommonFileDialogFilter(filterParts[0].TrimEnd(), filterParts[1].TrimEnd(')')));
+                    }
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                    return new List<string>(dialog.FileNames);
+            }
+            
+            return new List<string>() { "" };
         }
     }
 }
