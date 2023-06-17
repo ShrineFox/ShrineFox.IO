@@ -11,7 +11,7 @@ namespace ShrineFox.IO
     {
         public static List<KeyValuePair<object, object>> Deserialize(string path)
         {
-            var deserializer = new DeserializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build();
+            var deserializer = new DeserializerBuilder().Build();
             List<KeyValuePair<object, object>> data = deserializer.Deserialize<IDictionary<object, object>>(File.ReadAllText(path)).ToList();
             return data;
         }
@@ -19,7 +19,7 @@ namespace ShrineFox.IO
         public static void Serialize(List<KeyValuePair<object, object>> ymlObj, string path)
         {
             var obj = ymlObj.ToDictionary(t => t.Key, t => t.Value);
-            var serializer = new SerializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build();
+            var serializer = new SerializerBuilder().Build();
             var yamlTxt = serializer.Serialize(obj);
             File.WriteAllText(path, yamlTxt);
         }

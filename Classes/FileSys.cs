@@ -18,7 +18,7 @@ namespace ShrineFox.IO
         /// <param name="destFolder">The path of the directory to copy to.</param>
         public static void CopyDir(string sourceFolder, string destFolder)
         {
-            if (!Directory.Exists(destFolder))
+            if (!Directory.Exists(destFolder) && !File.Exists(destFolder))
                 Directory.CreateDirectory(destFolder);
 
             // Get Files & Copy
