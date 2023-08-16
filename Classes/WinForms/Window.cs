@@ -61,7 +61,8 @@ namespace ShrineFox.IO
             Process p = new Process();
             p.StartInfo.FileName = exePath;
             p.StartInfo.Arguments = args;
-            //p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            
             p.Start();
             Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
             Thread.Sleep(1200);

@@ -61,6 +61,7 @@
     <Compile Include="Classes\Endian\Unsafe.cs" />
     <Compile Include="Classes\Ext.cs" />
     <Compile Include="Classes\FileSys.cs" />
+    <Compile Include="Classes\WinForms\Extensions\ObjectExtensions.cs" />
     <Compile Include="Classes\WinForms\FormControls.cs" />
     <Compile Include="Classes\WinForms\Forms\SettingsForm.cs">
       <SubType>Form</SubType>
