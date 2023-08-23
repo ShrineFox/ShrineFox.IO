@@ -29,10 +29,10 @@ namespace ShrineFox.IO
             control.Cursor = Cursors.Hand;
             control.TabStyle = TabStyle.Style1;
             // Animation
-            control.UseAnimation = true;
-            control.AnimateEasingType = EasingType.Linear;
-            control.AnimateTime = 200;
-            control.Speed = 5;
+            control.UseAnimation = false;
+            //control.AnimateEasingType = EasingType.Linear;
+            //control.AnimateTime = 50;
+            //control.Speed = 5;
 
             return control;
         }

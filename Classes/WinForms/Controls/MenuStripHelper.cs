@@ -53,7 +53,7 @@ namespace ShrineFox.IO
         private static void ApplyIconFromFile(ToolStripMenuItem tsmi, List<Tuple<string, string>> menuStripIcons)
         {
             string iconPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        $"Icons\\{menuStripIcons.Single(x => x.Item1 == tsmi.Name).Item2}.png");
+                        $"Dependencies\\Icons\\{menuStripIcons.Single(x => x.Item1 == tsmi.Name).Item2}.png");
             if (!File.Exists(iconPath))
                 ExtractIconFrom7z(iconPath);
 
@@ -61,7 +61,7 @@ namespace ShrineFox.IO
             tsmi.ImageScaling = ToolStripItemImageScaling.None;
         }
 
-        private static void ExtractIconFrom7z(string iconPath)
+        public static void ExtractIconFrom7z(string iconPath)
         {
             string exeFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string icon7zFile = Path.Combine(exeFolder, "Dependencies\\Icons.7z");
