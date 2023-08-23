@@ -84,49 +84,6 @@ namespace ShrineFox.IO
         }
     }
 
-    // Return the path of the currently executing program
-    public static class EntryAssemblyInfo
-    {
-        private static string _executablePath;
-
-        public static string ExecutablePath
-        {
-            get
-            {
-                if (_executablePath == null)
-                {
-                    PermissionSet permissionSets = new PermissionSet(PermissionState.None);
-                    permissionSets.AddPermission(new FileIOPermission(PermissionState.Unrestricted));
-                    permissionSets.AddPermission(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
-                    permissionSets.Assert();
-
-                    string uriString = null;
-                    var entryAssembly = Assembly.GetEntryAssembly();
-
-                    if (entryAssembly == null)
-                        uriString = Process.GetCurrentProcess().MainModule.FileName;
-                    else
-                        uriString = entryAssembly.CodeBase;
-
-                    PermissionSet.RevertAssert();
-
-                    if (string.IsNullOrWhiteSpace(uriString))
-                        throw new Exception("Can not Get EntryAssembly or Process MainModule FileName");
-                    else
-                    {
-                        var uri = new Uri(uriString);
-                        if (uri.IsFile)
-                            _executablePath = string.Concat(uri.LocalPath, Uri.UnescapeDataString(uri.Fragment));
-                        else
-                            _executablePath = uri.ToString();
-                    }
-                }
-
-                return _executablePath;
-            }
-        }
-    }
-
     [ToolboxBitmap(typeof(System.Windows.Forms.TabControl))]
     public class TabControl : Dotnetrix.Controls.TabControl
     {
@@ -197,78 +154,5 @@ namespace ShrineFox.IO
                 }
             }
         }
-    }
-
-    public class SFRichTextBox : RichTextBox
-    {
-        public SFRichTextBox()
-        {
-            Selectable = true;
-        }
-        const int WM_SETFOCUS = 0x0007;
-        const int WM_KILLFOCUS = 0x0008;
-
-        ///<summary>
-        /// Enables or disables selection highlight. 
-        /// If you set `Selectable` to `false` then the selection highlight
-        /// will be disabled. 
-        /// It's enabled by default.
-        ///</summary>
-        [DefaultValue(true)]
-        public bool Selectable { get; set; }
-        protected override void WndProc(ref Message m)
-        {
-            if (m.Msg == WM_SETFOCUS && Selectable)
-                m.Msg = WM_KILLFOCUS;
-
-            base.WndProc(ref m);
-        }
-    }
-
-    static public class SyncUIHelper
-    {
-
-        static public Thread MainThread { get; private set; }
-
-        // Must be called from Program.Main
-        static public void Initialize()
-        {
-            MainThread = Thread.CurrentThread;
-        }
-
-        static public void SyncUI(this Control control, Action action, bool wait = true)
-        {
-            if (control == null) throw new ArgumentNullException(nameof(control));
-            if (!Thread.CurrentThread.IsAlive) throw new ThreadStateException();
-            Exception exception = null;
-            Semaphore semaphore = null;
-            Action processAction = () =>
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
-            };
-            Action processActionWait = () =>
-            {
-                processAction();
-                semaphore?.Release();
-            };
-            if (control.InvokeRequired && Thread.CurrentThread != MainThread)
-            {
-                if (wait) semaphore = new Semaphore(0, 1);
-                control.BeginInvoke(wait ? processActionWait : processAction);
-                semaphore?.WaitOne();
-            }
-            else
-                processAction();
-            if (exception != null)
-                throw exception;
-        }
-
     }
 }

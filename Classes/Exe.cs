@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.Remoting;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Security.Permissions;
+using System.Security;
 
 namespace ShrineFox.IO
 {
@@ -247,6 +243,49 @@ namespace ShrineFox.IO
                 }
             }
             catch { }
+        }
+    }
+
+    // Return the path of the currently executing program
+    public static class EntryAssemblyInfo
+    {
+        private static string _executablePath;
+
+        public static string ExecutablePath
+        {
+            get
+            {
+                if (_executablePath == null)
+                {
+                    PermissionSet permissionSets = new PermissionSet(PermissionState.None);
+                    permissionSets.AddPermission(new FileIOPermission(PermissionState.Unrestricted));
+                    permissionSets.AddPermission(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
+                    permissionSets.Assert();
+
+                    string uriString = null;
+                    var entryAssembly = Assembly.GetEntryAssembly();
+
+                    if (entryAssembly == null)
+                        uriString = Process.GetCurrentProcess().MainModule.FileName;
+                    else
+                        uriString = entryAssembly.CodeBase;
+
+                    PermissionSet.RevertAssert();
+
+                    if (string.IsNullOrWhiteSpace(uriString))
+                        throw new Exception("Can not Get EntryAssembly or Process MainModule FileName");
+                    else
+                    {
+                        var uri = new Uri(uriString);
+                        if (uri.IsFile)
+                            _executablePath = string.Concat(uri.LocalPath, Uri.UnescapeDataString(uri.Fragment));
+                        else
+                            _executablePath = uri.ToString();
+                    }
+                }
+
+                return _executablePath;
+            }
         }
     }
 }

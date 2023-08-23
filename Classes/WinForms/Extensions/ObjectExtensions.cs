@@ -15,6 +15,11 @@ namespace ShrineFox.IO
             return (type.IsValueType & type.IsPrimitive);
         }
 
+        /// <summary>
+        /// Create a deep copy of an object.
+        /// </summary>
+        /// <param name="originalObject">The object to copy.</param>
+        /// <returns></returns>
         public static Object Copy(this Object originalObject)
         {
             return InternalCopy(originalObject, new Dictionary<Object, Object>(new ReferenceEqualityComparer()));
