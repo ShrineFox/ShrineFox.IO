@@ -147,8 +147,8 @@ namespace ShrineFox.IO
                 if (waitForExit)
                     p.WaitForExit();
                 // Start the asynchronous read
-                if (p.StartInfo.RedirectStandardOutput)
-                    p.BeginOutputReadLine();
+                //if (p.StartInfo.RedirectStandardOutput)
+                    //p.BeginOutputReadLine();
                 RemoveHandleFromProcList(p.Handle);
                 p.Close();
                 p.Dispose();
