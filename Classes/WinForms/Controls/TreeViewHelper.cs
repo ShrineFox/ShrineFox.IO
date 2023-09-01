@@ -77,6 +77,7 @@ namespace ShrineFox.IO
         {
             if (string.IsNullOrWhiteSpace(path)) return;
             Text = Path.GetFileName(path);
+            Tag = path;
             Name = Path.GetFileName(path);
             _isFile = File.Exists(path);
             _path = path;

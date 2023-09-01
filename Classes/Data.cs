@@ -22,5 +22,25 @@ namespace ShrineFox.IO
                  .ToArray());
         }
 
+        public static string SanitizeString(string inputString)
+        {
+            if (string.IsNullOrEmpty(inputString))
+                return inputString;
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var c in inputString)
+            {
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+                    sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        public static string TruncateString(string str, int maxLength)
+        {
+            if (string.IsNullOrEmpty(str)) return str;
+
+            return str.Substring(0, Math.Min(str.Length, maxLength));
+        }
     }
 }

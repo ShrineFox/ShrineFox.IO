@@ -111,7 +111,7 @@ namespace ShrineFox.IO
         /// <param name="args">Additional arguments for the exe.</param>
         /// <param name="waitForExit">(Optional) Whether to halt code execution until process is complete. True by default.</param>
         /// <param name="workingDir">(Optional) The directory to execute from. Uses exePath directory if not specified.</param>
-        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "")
+        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", bool hideWindow = true)
         {
             using (Process p = new Process())
             {
@@ -120,15 +120,14 @@ namespace ShrineFox.IO
                     p.StartInfo.WorkingDirectory = workingDir;
                 else
                     p.StartInfo.WorkingDirectory = Path.GetDirectoryName(exePath);
-                // Output working dir, exe path and arguments to console/log
-                Output.VerboseLog($"{workingDir}>{exePath} {args}");
+
                 // Set exe path and args, hide window and redirect output
                 p.StartInfo.FileName = exePath;
                 p.StartInfo.Arguments = args;
-                p.StartInfo.CreateNoWindow = true;
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.RedirectStandardError = true;
+                p.StartInfo.CreateNoWindow = hideWindow;
+                p.StartInfo.UseShellExecute = !hideWindow;
+                p.StartInfo.RedirectStandardOutput = hideWindow;
+                p.StartInfo.RedirectStandardError = hideWindow;
                 // Set event handler
                 p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
                 // Start the process
@@ -137,12 +136,19 @@ namespace ShrineFox.IO
                 p.Start();
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
 
-                Output.VerboseLog(p.StandardOutput.ReadToEnd());
+                if (p.StartInfo.RedirectStandardOutput)
+                {
+                    if (Process.GetCurrentProcess().MainWindowHandle != IntPtr.Zero)
+                        Output.VerboseLog(p.StandardOutput.ReadToEnd());
+                    else
+                        Console.WriteLine(p.StandardOutput.ReadToEnd());
+                }
 
                 if (waitForExit)
                     p.WaitForExit();
                 // Start the asynchronous read
-                //p.BeginOutputReadLine();
+                if (p.StartInfo.RedirectStandardOutput)
+                    p.BeginOutputReadLine();
                 RemoveHandleFromProcList(p.Handle);
                 p.Close();
                 p.Dispose();
