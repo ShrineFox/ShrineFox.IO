@@ -1,5 +1,6 @@
 ﻿using DarkUI.Controls;
 using DarkUI.Forms;
+using MetroSet_UI.Controls;
 using System.Windows.Forms;
 
 namespace ShrineFox.IO
@@ -38,10 +39,10 @@ namespace ShrineFox.IO
             btn_Save = new DarkButton();
             tlp_ProjectName = new TableLayoutPanel();
             txt_NewName = new DarkTextBox();
-            lbl_ProjectName = new DarkLabel();
+            lbl_ProjectName = new MetroSetLabel();
             tlp_Fields = new TableLayoutPanel();
             darkTextBox1 = new DarkTextBox();
-            darkLabel1 = new DarkLabel();
+            MetroSetLabel1 = new MetroSetLabel();
             this.tlp_Main.SuspendLayout();
             tlp_Buttons.SuspendLayout();
             tlp_ProjectName.SuspendLayout();
@@ -135,7 +136,7 @@ namespace ShrineFox.IO
             tlp_Fields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             tlp_Fields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 80F));
             tlp_Fields.Controls.Add(darkTextBox1, 1, 0);
-            tlp_Fields.Controls.Add(darkLabel1, 0, 0);
+            tlp_Fields.Controls.Add(MetroSetLabel1, 0, 0);
             tlp_Fields.Dock = DockStyle.Fill;
             tlp_Fields.Margin = new Padding(2);
             tlp_Fields.Name = "tlp_Fields";
@@ -151,13 +152,13 @@ namespace ShrineFox.IO
             darkTextBox1.Name = "darkTextBox1";
             darkTextBox1.TabIndex = 26;
             // 
-            // darkLabel1
+            // MetroSetLabel1
             // 
-            darkLabel1.Anchor = AnchorStyles.Right;
-            darkLabel1.Margin = new Padding(2, 0, 2, 0);
-            darkLabel1.Name = "darkLabel1";
-            darkLabel1.TabIndex = 25;
-            darkLabel1.Text = "New Name:";
+            MetroSetLabel1.Anchor = AnchorStyles.Right;
+            MetroSetLabel1.Margin = new Padding(2, 0, 2, 0);
+            MetroSetLabel1.Name = "MetroSetLabel1";
+            MetroSetLabel1.TabIndex = 25;
+            MetroSetLabel1.Text = "New Name:";
             // 
             // RenameForm
             // 
@@ -187,9 +188,9 @@ namespace ShrineFox.IO
         private DarkButton btn_Save;
         private TableLayoutPanel tlp_Fields;
         private DarkTextBox darkTextBox1;
-        private DarkLabel darkLabel1;
+        private MetroSetLabel MetroSetLabel1;
         private TableLayoutPanel tlp_ProjectName;
         private DarkTextBox txt_NewName;
-        private DarkLabel lbl_ProjectName;
+        private MetroSetLabel lbl_ProjectName;
     }
 }

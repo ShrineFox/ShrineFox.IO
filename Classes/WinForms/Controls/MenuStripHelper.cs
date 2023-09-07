@@ -28,11 +28,11 @@ namespace ShrineFox.IO
         public static void SetMenuStripIcons(List<Tuple<string, string>> iconNames, Form form)
         {
             // Apply to Child Context Menu Strips
-            foreach (DarkContextMenu menuStrip in form.FlattenChildren<DarkContextMenu>())
+            foreach (System.Windows.Forms.ContextMenuStrip menuStrip in form.FlattenChildren<System.Windows.Forms.ContextMenuStrip>())
                 ApplyIconsFromList(menuStrip.Items, iconNames);
 
             // Apply to Child Menu Strip Items
-            foreach (DarkMenuStrip menuStrip in form.FlattenChildren<DarkMenuStrip>())
+            foreach (System.Windows.Forms.MenuStrip menuStrip in form.FlattenChildren<System.Windows.Forms.MenuStrip>())
                 ApplyIconsFromList(menuStrip.Items, iconNames);
         }
 

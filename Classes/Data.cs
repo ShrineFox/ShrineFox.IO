@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,6 +43,13 @@ namespace ShrineFox.IO
             if (string.IsNullOrEmpty(str)) return str;
 
             return str.Substring(0, Math.Min(str.Length, maxLength));
+        }
+
+        public static Color StringToColor(string colorStr)
+        {
+            TypeConverter cc = TypeDescriptor.GetConverter(typeof(Color));
+            var result = (Color)cc.ConvertFromString(colorStr);
+            return result;
         }
     }
 }
