@@ -44,16 +44,18 @@ namespace ShrineFox.IO
                 if (menuStripIcons.Any(x => x.Item1 == tsmi.Name))
                     ApplyIconFromFile(tsmi, menuStripIcons);
                 // Apply drop down menu icon
-                foreach (ToolStripMenuItem tsmi2 in tsmi.DropDownItems)
-                    if (menuStripIcons.Any(x => x.Item1 == tsmi2.Name))
-                        ApplyIconFromFile(tsmi2, menuStripIcons);
+                foreach (dynamic item in tsmi.DropDownItems)
+                {
+                    if (menuStripIcons.Any(x => x.Item1 == item.Name))
+                        ApplyIconFromFile(item, menuStripIcons);
+                }
             }
         }
 
-        private static void ApplyIconFromFile(ToolStripMenuItem tsmi, List<Tuple<string, string>> menuStripIcons)
+        private static void ApplyIconFromFile(dynamic tsmi, List<Tuple<string, string>> menuStripIcons)
         {
             string iconPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        $"Dependencies\\Icons\\{menuStripIcons.Single(x => x.Item1 == tsmi.Name).Item2}.png");
+                    $"Dependencies\\Icons\\{menuStripIcons.Single(x => x.Item1 == tsmi.Name).Item2}.png");
             if (!File.Exists(iconPath))
                 ExtractIconFrom7z(iconPath);
 
