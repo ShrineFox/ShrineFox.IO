@@ -131,15 +131,20 @@ namespace ShrineFox.IO
                 p.StartInfo.UseShellExecute = !redirectStdOut;
                 p.StartInfo.RedirectStandardOutput = redirectStdOut;
                 p.StartInfo.RedirectStandardError = redirectStdOut;
-                p.StartInfo.StandardOutputEncoding = Encoding.Unicode;
-                p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
-                p.EnableRaisingEvents = true;
-                p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
-                p.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
+                if (redirectStdOut)
+                {
+                    p.StartInfo.StandardOutputEncoding = Encoding.Unicode;
+                    p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
+                    p.EnableRaisingEvents = true;
+                    p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
+                    p.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
+                }
+                
                 p.Exited += ProcessEnded;
                 p.Start();
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
-                p.BeginOutputReadLine();
+                if (redirectStdOut)
+                    p.BeginOutputReadLine();
                 //Output.Log(p.StandardOutput.ReadToEnd());
 
                 if (waitForExit)
