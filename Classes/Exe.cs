@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Runtime.Remoting;
 using System.Security.Permissions;
 using System.Security;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ShrineFox.IO
 {
@@ -111,7 +113,8 @@ namespace ShrineFox.IO
         /// <param name="args">Additional arguments for the exe.</param>
         /// <param name="waitForExit">(Optional) Whether to halt code execution until process is complete. True by default.</param>
         /// <param name="workingDir">(Optional) The directory to execute from. Uses exePath directory if not specified.</param>
-        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", bool hideWindow = true)
+        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", 
+            bool hideWindow = true, bool redirectStdOut = false)
         {
             using (Process p = new Process())
             {
@@ -125,31 +128,25 @@ namespace ShrineFox.IO
                 p.StartInfo.FileName = exePath;
                 p.StartInfo.Arguments = args;
                 p.StartInfo.CreateNoWindow = hideWindow;
-                p.StartInfo.UseShellExecute = !hideWindow;
-                p.StartInfo.RedirectStandardOutput = hideWindow;
-                p.StartInfo.RedirectStandardError = hideWindow;
-                // Set event handler
-                p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
-                // Start the process
+                p.StartInfo.UseShellExecute = !redirectStdOut;
+                p.StartInfo.RedirectStandardOutput = redirectStdOut;
+                p.StartInfo.RedirectStandardError = redirectStdOut;
+                p.StartInfo.StandardOutputEncoding = Encoding.Unicode;
+                p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
                 p.EnableRaisingEvents = true;
+                p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
+                p.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
                 p.Exited += ProcessEnded;
                 p.Start();
                 Exe.Processes.Add(new Tuple<string, IntPtr>(p.ProcessName, p.Handle));
-
-                if (p.StartInfo.RedirectStandardOutput)
-                {
-                    if (Process.GetCurrentProcess().MainWindowHandle != IntPtr.Zero)
-                        Output.VerboseLog(p.StandardOutput.ReadToEnd());
-                    else
-                        Console.WriteLine(p.StandardOutput.ReadToEnd());
-                }
+                p.BeginOutputReadLine();
+                //Output.Log(p.StandardOutput.ReadToEnd());
 
                 if (waitForExit)
                     p.WaitForExit();
-                // Start the asynchronous read
-                //if (p.StartInfo.RedirectStandardOutput)
-                    //p.BeginOutputReadLine();
+
                 RemoveHandleFromProcList(p.Handle);
+
                 p.Close();
                 p.Dispose();
             }
