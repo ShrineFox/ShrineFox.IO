@@ -82,7 +82,7 @@ namespace ShrineFox.IO
                     LogControl.BeginInvoke(new Action(() =>
                     {
                         LogControl.SuspendLayout();
-                        LogControl.SelectionStart = LogControl.TextLength;
+                        //LogControl.SelectionStart = LogControl.TextLength;
                         LogControl.SelectionLength = 0;
                         LogControl.SelectionColor = FromColor(color);
                         LogControl.AppendText(logText);
@@ -94,7 +94,7 @@ namespace ShrineFox.IO
                 else
                 {
                     LogControl.SuspendLayout();
-                    LogControl.SelectionStart = LogControl.TextLength;
+                    //LogControl.SelectionStart = LogControl.TextLength;
                     LogControl.SelectionLength = 0;
                     LogControl.SelectionColor = FromColor(color);
                     LogControl.AppendText(logText);

@@ -137,7 +137,7 @@ namespace ShrineFox.IO
                     p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
                     p.EnableRaisingEvents = true;
                     p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
-                    p.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
+                    p.ErrorDataReceived += new DataReceivedEventHandler(ErrorOutputHandler);
                 }
                 
                 p.Exited += ProcessEnded;
@@ -233,6 +233,11 @@ namespace ShrineFox.IO
         private static void OutputHandler(object sender, DataReceivedEventArgs e)
         {
             Output.Log(e.Data);
+        }
+
+        private static void ErrorOutputHandler(object sender, DataReceivedEventArgs e)
+        {
+            Output.Log(e.Data, ConsoleColor.Red);
         }
 
         /// <summary>
