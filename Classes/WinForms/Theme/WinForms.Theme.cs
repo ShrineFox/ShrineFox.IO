@@ -51,7 +51,7 @@ namespace ShrineFox.IO
 
         private static void SetColorProperties(dynamic ctrl)
         {
-            if (WinForms.PropertyExists(ctrl, "Style"))
+            if (WinForms.PropertyExists(ctrl, "Style") && ctrl.GetType() != typeof(ProgressBar))
                 ctrl.Style = ThemeStyle;
 
             if (ThemeStyle == Style.Dark)
