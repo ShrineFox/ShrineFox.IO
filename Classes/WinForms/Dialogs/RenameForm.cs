@@ -1,10 +1,10 @@
-﻿using DarkUI.Forms;
+﻿using MetroSet_UI.Forms;
 using System;
 using System.Windows.Forms;
 
 namespace ShrineFox.IO
 {
-    public partial class RenameForm : DarkForm
+    public partial class RenameForm : MetroSetForm
     {
         public string RenameText
         {

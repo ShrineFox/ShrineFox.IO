@@ -1,29 +1,15 @@
-﻿using DarkUI.Controls;
-using DarkUI.Forms;
-using MetroSet_UI.Controls;
+﻿using MetroSet_UI.Controls;
+using MetroSet_UI.Forms;
 using System.Windows.Forms;
 
 namespace ShrineFox.IO
 {
-    partial class RenameForm : DarkForm
+    partial class RenameForm : MetroSetForm
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         #region Windows Form Designer generated code
 
@@ -35,19 +21,18 @@ namespace ShrineFox.IO
         {
             this.tlp_Main = new TableLayoutPanel();
             tlp_Buttons = new TableLayoutPanel();
-            btn_Cancel = new DarkButton();
-            btn_Save = new DarkButton();
+            btn_Cancel = new Button();
+            btn_Save = new Button();
             tlp_ProjectName = new TableLayoutPanel();
-            txt_NewName = new DarkTextBox();
+            txt_NewName = new TextBox();
             lbl_ProjectName = new MetroSetLabel();
             tlp_Fields = new TableLayoutPanel();
-            darkTextBox1 = new DarkTextBox();
+            darkTextBox1 = new TextBox();
             MetroSetLabel1 = new MetroSetLabel();
             this.tlp_Main.SuspendLayout();
             tlp_Buttons.SuspendLayout();
             tlp_ProjectName.SuspendLayout();
             tlp_Fields.SuspendLayout();
-            SuspendLayout();
             // 
             // tlp_Main
             // 
@@ -159,38 +144,24 @@ namespace ShrineFox.IO
             MetroSetLabel1.Name = "MetroSetLabel1";
             MetroSetLabel1.TabIndex = 25;
             MetroSetLabel1.Text = "New Name:";
-            // 
+            //
             // RenameForm
-            // 
-            AcceptButton = btn_Save;
-            AutoScaleMode = AutoScaleMode.Font;
-            CancelButton = btn_Cancel;
-            Controls.Add(this.tlp_Main);
-            Margin = new Padding(2);
-            Name = "RenameForm";
-            Padding = new Padding(1, 0, 1, 2);
-            SizeGripStyle = SizeGripStyle.Show;
-            Text = "Set New Name";
-            this.tlp_Main.ResumeLayout(false);
-            tlp_Buttons.ResumeLayout(false);
-            tlp_ProjectName.ResumeLayout(false);
-            tlp_ProjectName.PerformLayout();
-            tlp_Fields.ResumeLayout(false);
-            tlp_Fields.PerformLayout();
-            ResumeLayout(false);
+            //
+            this.Name = "Rename";
+            this.Text = "Set Name";
         }
 
         #endregion
         private TableLayoutPanel tlp_Main;
         private TableLayoutPanel tlp_Settings;
         private TableLayoutPanel tlp_Buttons;
-        private DarkButton btn_Cancel;
-        private DarkButton btn_Save;
+        private Button btn_Cancel;
+        private Button btn_Save;
         private TableLayoutPanel tlp_Fields;
-        private DarkTextBox darkTextBox1;
+        private TextBox darkTextBox1;
         private MetroSetLabel MetroSetLabel1;
         private TableLayoutPanel tlp_ProjectName;
-        private DarkTextBox txt_NewName;
+        private TextBox txt_NewName;
         private MetroSetLabel lbl_ProjectName;
     }
 }
