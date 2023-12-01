@@ -12,17 +12,21 @@ namespace ShrineFox.IO
             private set;
         }
 
-        public RenameForm(string text)
+        public RenameForm(string title, string text)
         {
             InitializeComponent();
-            this.txt_NewName.Text = text;
+            Theme.ApplyToForm(this);
+
+            this.Text = title;
+            this.txt_RenameText.Text = text;
         }
 
         private void Save_Click(object sender, EventArgs e)
         {
-            RenameText = txt_NewName.Text;
+            RenameText = txt_RenameText.Text;
             this.DialogResult = DialogResult.OK;
         }
+
         private void Cancel_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
