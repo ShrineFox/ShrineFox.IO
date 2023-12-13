@@ -167,5 +167,26 @@ namespace ShrineFox.IO
 
             return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
+
+        public static string CreateUniqueDir(string outputDir)
+        {
+            int i = 2;
+            while (true)
+            {
+                string outDir = outputDir;
+                if (Directory.Exists(outDir))
+                {
+                    i++;
+                    outDir = outputDir + i;
+                }
+                else
+                {
+                    return outDir;
+                }
+                
+                if (i == 999)
+                    return outDir;
+            }
+        }
     }
 }
