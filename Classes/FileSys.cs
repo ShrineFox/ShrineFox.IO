@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -62,7 +63,7 @@ namespace ShrineFox.IO
         /// <param name="file1">The first file to compare.</param>
         /// <param name="file2">The second file to compare.</param>
         /// <returns></returns>
-        public static bool AreFilesIdentical(string file1, string file2)
+        public static bool AreFilesIdentical(string file1, string file2, bool convertImages = false)
         {
             int file1byte;
             int file2byte;
@@ -74,6 +75,21 @@ namespace ShrineFox.IO
             {
                 // Return true to indicate that the files are the same.
                 return true;
+            }
+
+            // Determine if bitmaps are identical if it's an image format
+            if (convertImages)
+            {
+                string[] imageFormats = new string[] { ".jpg", ".jpeg", ".bmp", ".png", ".jfif", ".gif", ".tif", ".tiff" };
+                if (imageFormats.Any(f => file1.ToLower().EndsWith(f)) 
+                    && imageFormats.Any(f => file1.ToLower().EndsWith(f)))
+                {
+                    if (ConvertToBitmap(file1) == ConvertToBitmap(file2))
+                    {
+                        // Return true to indicate that the files are the same.
+                        return true;
+                    }
+                }
             }
 
             // Open the two files.
@@ -111,6 +127,19 @@ namespace ShrineFox.IO
             // equal to "file2byte" at this point only if the files are 
             // the same.
             return ((file1byte - file2byte) == 0);
+        }
+
+        public static Bitmap ConvertToBitmap(string fileName)
+        {
+            Bitmap bitmap;
+            using (Stream bmpStream = System.IO.File.Open(fileName, System.IO.FileMode.Open))
+            {
+                Image image = Image.FromStream(bmpStream);
+
+                bitmap = new Bitmap(image);
+
+            }
+            return bitmap;
         }
 
         public static string GetExtensionlessPath(string path)
