@@ -199,10 +199,12 @@ namespace ShrineFox.IO
 
         public static string CreateUniqueDir(string outputDir)
         {
-            int i = 2;
+            int i = 1;
+
+            string outDir = outputDir;
+
             while (true)
             {
-                string outDir = outputDir;
                 if (Directory.Exists(outDir))
                 {
                     i++;

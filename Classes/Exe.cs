@@ -128,6 +128,8 @@ namespace ShrineFox.IO
                 p.StartInfo.FileName = exePath;
                 p.StartInfo.Arguments = args;
                 p.StartInfo.CreateNoWindow = hideWindow;
+                if (hideWindow)
+                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 p.StartInfo.UseShellExecute = !redirectStdOut;
                 p.StartInfo.RedirectStandardOutput = redirectStdOut;
                 p.StartInfo.RedirectStandardError = redirectStdOut;
