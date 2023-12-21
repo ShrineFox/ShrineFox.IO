@@ -23,8 +23,8 @@ namespace ShrineFox.IO
             this.lbl_NewText = new System.Windows.Forms.Label();
             this.txt_RenameText = new System.Windows.Forms.TextBox();
             this.tlp_Buttons = new System.Windows.Forms.TableLayoutPanel();
-            this.button1 = new System.Windows.Forms.Button();
             this.btn_OK = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.tlp_Main.SuspendLayout();
             this.tlp_Buttons.SuspendLayout();
             this.SuspendLayout();
@@ -66,6 +66,7 @@ namespace ShrineFox.IO
             this.txt_RenameText.Name = "txt_RenameText";
             this.txt_RenameText.Size = new System.Drawing.Size(339, 26);
             this.txt_RenameText.TabIndex = 1;
+            this.txt_RenameText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Txt_KeyDown);
             // 
             // tlp_Buttons
             // 
@@ -82,18 +83,6 @@ namespace ShrineFox.IO
             this.tlp_Buttons.Size = new System.Drawing.Size(339, 70);
             this.tlp_Buttons.TabIndex = 2;
             // 
-            // button1
-            // 
-            this.button1.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button1.Location = new System.Drawing.Point(3, 3);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(163, 64);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Cancel";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Cancel_Click);
-            // 
             // btn_OK
             // 
             this.btn_OK.DialogResult = System.Windows.Forms.DialogResult.OK;
@@ -105,6 +94,18 @@ namespace ShrineFox.IO
             this.btn_OK.Text = "OK";
             this.btn_OK.UseVisualStyleBackColor = true;
             this.btn_OK.Click += new System.EventHandler(this.Save_Click);
+            // 
+            // button1
+            // 
+            this.button1.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button1.Location = new System.Drawing.Point(3, 3);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(163, 64);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "Cancel";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // RenameForm
             // 

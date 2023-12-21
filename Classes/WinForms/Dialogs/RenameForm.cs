@@ -32,5 +32,15 @@ namespace ShrineFox.IO
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
+
+        private void Txt_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
+
+            if (e.KeyCode == Keys.Enter)
+            {
+                Save_Click(this, new EventArgs());
+            }
+        }
     }
 }
