@@ -78,6 +78,7 @@
       <DependentUpon>RenameForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\WinForms\Extensions\ControlExtensions.cs" />
+    <Compile Include="Classes\WinForms\Extensions\MessageBoxManager.cs" />
     <Compile Include="Classes\WinForms\Extensions\ObjectExtensions.cs" />
     <Compile Include="Classes\WinForms\Controls\SFControls.cs" />
     <Compile Include="Classes\WinForms\Theme\WinForms.Theme.cs" />

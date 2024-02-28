@@ -154,5 +154,53 @@ namespace ShrineFox.IO
                 }
             }
         }
+   
+    }
+
+    // https://stackoverflow.com/a/58658119
+    static public class SyncUIHelper
+    {
+        static public Thread MainThread { get; private set; }
+
+        // Must be called from Program.Main
+        static public void Initialize()
+        {
+            MainThread = Thread.CurrentThread;
+        }
+
+        static public void SyncUI(this Control control, Action action, bool wait = true)
+        {
+            if (control == null) throw new ArgumentNullException(nameof(control));
+            if (!Thread.CurrentThread.IsAlive) throw new ThreadStateException();
+            Exception exception = null;
+            Semaphore semaphore = null;
+            Action processAction = () =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            };
+            Action processActionWait = () =>
+            {
+                processAction();
+                semaphore?.Release();
+            };
+            if (control.InvokeRequired && Thread.CurrentThread != MainThread)
+            {
+                if (wait) semaphore = new Semaphore(0, 1);
+                control.BeginInvoke(wait ? processActionWait : processAction);
+                semaphore?.WaitOne();
+            }
+            else
+                processAction();
+            if (exception != null)
+                throw exception;
+        }
+
     }
 }
