@@ -121,7 +121,7 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="WindowsAPICodePack">
-      <Version>7.0.4</Version>
+      <Version>8.0.4</Version>
     </PackageReference>
     <PackageReference Include="YamlDotNet.NetCore">
       <Version>1.0.0</Version>

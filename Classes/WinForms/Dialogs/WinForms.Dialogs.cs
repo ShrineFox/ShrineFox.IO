@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,9 +34,11 @@ namespace ShrineFox.IO
         /// </summary>
         /// <param name="title">The title of the folder picker window.</param>
         /// <returns></returns>
-        public static string SelectFolder(string title = "Choose Folder...")
+        public static string SelectFolder(string title = "Choose Folder...", string defaultDirectory = "")
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            if (Directory.Exists(defaultDirectory))
+                dialog.DefaultDirectory = defaultDirectory;
             dialog.IsFolderPicker = true;
             dialog.Title = title;
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
@@ -53,11 +56,15 @@ namespace ShrineFox.IO
         /// <param name="save">If true, the confirm button will say Save. Otherwise, Open.</param>
         /// <returns></returns>
         public static List<string> SelectFile(string title = "Choose File...", bool multiSelect = false,
-            string[] filters = null, bool save = false)
+            string[] filters = null, bool save = false, string defaultDirectory = "", string defaultFileName = "")
         {
             if (save)
             {
                 CommonSaveFileDialog dialog = new CommonSaveFileDialog();
+
+                if (Directory.Exists(defaultDirectory))
+                    dialog.DefaultDirectory = defaultDirectory;
+                dialog.DefaultFileName = defaultFileName;
 
                 dialog.Title = title;
                 if (filters != null)
@@ -72,6 +79,10 @@ namespace ShrineFox.IO
             else
             {
                 CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+
+                if (Directory.Exists(defaultDirectory))
+                    dialog.DefaultDirectory = defaultDirectory;
+                dialog.DefaultFileName = defaultFileName;
 
                 dialog.Title = title;
                 dialog.Multiselect = multiSelect;
