@@ -177,6 +177,22 @@ namespace ShrineFox.IO
             return null;
         }
 
+        /// <summary>
+        /// Waits up to 20 seconds for a folder to exist and become available to open.
+        /// </summary>
+        /// <param name="dirPath">The path to the folder to wait for.</param>
+        /// <returns></returns>
+        public static void WaitForDirectory(string dirPath)
+        {
+            for (int numTries = 0; numTries < 10; numTries++)
+            {
+                if (!Directory.Exists(dirPath))
+                    Thread.Sleep(2000);
+                else
+                    return;
+            }
+        }
+
         public static string GetRelativePath(FileSystemInfo from, FileSystemInfo to)
         {
             Func<FileSystemInfo, string> getPath = fsi =>
