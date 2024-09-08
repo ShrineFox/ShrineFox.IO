@@ -44,7 +44,8 @@ namespace ShrineFox.IO
 
                 SetColorProperties(ctrl);
 
-                if (ctrl.GetType() == typeof(MenuStrip) || ctrl.GetType() == typeof(ContextMenuStrip))
+                if (ctrl.GetType() == typeof(MenuStrip) || ctrl.GetType() == typeof(ContextMenuStrip) 
+                    || ctrl.GetType() == typeof(DataGridView))
                     RecursivelySetColors(ctrl);
             }
         }
@@ -101,6 +102,11 @@ namespace ShrineFox.IO
                 SetMenuRenderer(ctrl);
                 foreach (dynamic item in ctrl.Items)
                     RecursivelySetColors(item);
+            }
+            else if (ctrl.GetType() == typeof(DataGridView))
+            {
+                var dgv = (DataGridView)ctrl;
+                RecursivelySetColors(dgv.DefaultCellStyle);
             }
             else if (ctrl.GetType() == typeof(ToolStripMenuItem) || ctrl.GetType() == typeof(ToolStripItem))
                 foreach (dynamic item in ctrl.DropDownItems)
