@@ -113,9 +113,11 @@ namespace ShrineFox.IO
         /// <param name="args">Additional arguments for the exe.</param>
         /// <param name="waitForExit">(Optional) Whether to halt code execution until process is complete. True by default.</param>
         /// <param name="workingDir">(Optional) The directory to execute from. Uses exePath directory if not specified.</param>
-        public static void Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", 
+        public static bool Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", 
             bool hideWindow = true, bool redirectStdOut = false)
         {
+            int exitCode = 0;
+
             using (Process p = new Process())
             {
                 // Set working directory to exe dir if not specified
@@ -150,13 +152,20 @@ namespace ShrineFox.IO
                 //Output.Log(p.StandardOutput.ReadToEnd());
 
                 if (waitForExit)
+                {
                     p.WaitForExit();
+                    exitCode = p.ExitCode;
+                }
 
                 RemoveHandleFromProcList(p.Handle);
 
                 p.Close();
                 p.Dispose();
             }
+
+            if (exitCode == 0)
+                return true;
+            return false;
         }
 
         /// <summary>
