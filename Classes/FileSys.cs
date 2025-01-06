@@ -235,5 +235,23 @@ namespace ShrineFox.IO
                     return outDir;
             }
         }
+
+        public static string CreateUniqueFilePath(string filePath)
+        {
+            int fileNumber = 1;
+            while (true)
+            {
+                if (File.Exists(filePath))
+                {
+                    fileNumber++;
+                    filePath = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)) + $" ({fileNumber})" + Path.GetExtension(filePath);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return filePath;
+        }
     }
 }
