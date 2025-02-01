@@ -59,6 +59,7 @@
     <Compile Include="Classes\Endian\EndianBinaryWriter.cs" />
     <Compile Include="Classes\Endian\Endianness.cs" />
     <Compile Include="Classes\Endian\EndiannessHelper.cs" />
+    <Compile Include="Classes\Endian\EndiannessSwapUtility.cs" />
     <Compile Include="Classes\Endian\FileHelper.cs" />
     <Compile Include="Classes\Endian\StringBinaryFormat.cs" />
     <Compile Include="Classes\Endian\Unsafe.cs" />
