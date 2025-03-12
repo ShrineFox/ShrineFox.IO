@@ -15,10 +15,11 @@ namespace ShrineFox.IO
     {
         public static List<Tuple<string,string>> GetMenuStripIconPairs(string txtPath)
         {
+            string path = Path.GetFullPath(txtPath);
             List<Tuple<string, string>> pairs = new List<Tuple<string, string>>();
             
-            if (File.Exists(txtPath))
-                foreach (var line in File.ReadAllLines(txtPath))
+            if (File.Exists(path))
+                foreach (var line in File.ReadAllLines(Path.GetFullPath(path)))
                     pairs.Add(new Tuple<string, string>(line.Split(' ')[0], line.Split(' ')[1]));
 
             return pairs;
@@ -37,16 +38,20 @@ namespace ShrineFox.IO
 
         private static void ApplyIconsFromList(ToolStripItemCollection items, List<Tuple<string, string>> menuStripIcons)
         {
-            foreach (ToolStripMenuItem tsmi in items)
+            foreach (dynamic tsmi in items)
             {
-                // Apply context menu icon
-                if (menuStripIcons.Any(x => x.Item1 == tsmi.Name))
-                    ApplyIconFromFile(tsmi, menuStripIcons);
-                // Apply drop down menu icon
-                foreach (dynamic item in tsmi.DropDownItems)
+                if (tsmi.GetType() == typeof(ToolStripMenuItem))
                 {
-                    if (menuStripIcons.Any(x => x.Item1 == item.Name))
-                        ApplyIconFromFile(item, menuStripIcons);
+                    // Apply context menu icon
+                    if (menuStripIcons.Any(x => x.Item1 == tsmi.Name))
+                        ApplyIconFromFile(tsmi, menuStripIcons);
+
+                    // Apply drop down menu icon
+                    foreach (dynamic item in tsmi.DropDownItems)
+                    {
+                        if (menuStripIcons.Any(x => x.Item1 == item.Name))
+                            ApplyIconFromFile(item, menuStripIcons);
+                    }
                 }
             }
         }
