@@ -114,7 +114,7 @@ namespace ShrineFox.IO
         /// <param name="waitForExit">(Optional) Whether to halt code execution until process is complete. True by default.</param>
         /// <param name="workingDir">(Optional) The directory to execute from. Uses exePath directory if not specified.</param>
         public static bool Run(string exePath, string args = "", bool waitForExit = true, string workingDir = "", 
-            bool hideWindow = true, bool redirectStdOut = false)
+            bool hideWindow = true, bool redirectStdOut = false, bool unicodeEncoding = true)
         {
             int exitCode = 0;
 
@@ -137,8 +137,18 @@ namespace ShrineFox.IO
                 p.StartInfo.RedirectStandardError = redirectStdOut;
                 if (redirectStdOut)
                 {
-                    p.StartInfo.StandardOutputEncoding = Encoding.Unicode;
-                    p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
+                    if (unicodeEncoding)
+                    {
+                        p.StartInfo.StandardOutputEncoding = Encoding.Unicode;
+                        p.StartInfo.StandardErrorEncoding = Encoding.Unicode;
+                    }
+                    else
+                    {
+                        p.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                        p.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                    }
+
                     p.EnableRaisingEvents = true;
                     p.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
                     p.ErrorDataReceived += new DataReceivedEventHandler(ErrorOutputHandler);
